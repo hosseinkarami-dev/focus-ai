@@ -29,7 +29,8 @@ data class TaskEntity(
     val completed: Boolean = false,
     val createdAtEpochMillis: Long,
     @ColumnInfo(defaultValue = "0") val planOrder: Int = 0,
-    val dueDateIso: String? = null
+    val dueDateIso: String? = null,
+    val completedAtEpochMillis: Long? = null
 )
 
 @Entity(
@@ -91,8 +92,8 @@ interface TaskDao {
     @Upsert
     suspend fun upsert(task: TaskEntity)
 
-    @Query("UPDATE tasks SET completed = :completed WHERE id = :id")
-    suspend fun setCompleted(id: String, completed: Boolean)
+    @Query("UPDATE tasks SET completed = :completed, completedAtEpochMillis = :completedAt WHERE id = :id")
+    suspend fun setCompleted(id: String, completed: Boolean, completedAt: Long?)
 
     @Query("DELETE FROM tasks WHERE id = :id")
     suspend fun delete(id: String)
@@ -142,6 +143,9 @@ interface FocusSessionDao {
     @Query("SELECT * FROM focus_sessions WHERE outcome != 'DISCARDED' ORDER BY startedAtEpochMillis DESC LIMIT 20")
     fun observeHistory(): Flow<List<FocusSessionEntity>>
 
+    @Query("SELECT * FROM focus_sessions ORDER BY startedAtEpochMillis DESC")
+    fun observeAll(): Flow<List<FocusSessionEntity>>
+
     @Upsert suspend fun upsert(session: FocusSessionEntity)
     @Query("SELECT * FROM focus_sessions WHERE endedAtEpochMillis IS NULL ORDER BY startedAtEpochMillis DESC LIMIT 1")
     suspend fun getActive(): FocusSessionEntity?
@@ -149,9 +153,9 @@ interface FocusSessionDao {
 
 @Database(
     entities = [TaskEntity::class, NoteEntity::class, SubtaskEntity::class, AppSettingsEntity::class, FocusSessionEntity::class],
-    version = 8,
+    version = 9,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8)]
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9)]
 )
 @ConstructedBy(FocusDatabaseConstructor::class)
 abstract class FocusDatabase : RoomDatabase() {
@@ -195,7 +199,8 @@ class RoomTaskRepository(private val dao: TaskDao, private val subtaskDao: Subta
                 completed = existing?.completed ?: false,
                 createdAtEpochMillis = existing?.createdAtEpochMillis ?: currentTimeMillis(),
                 planOrder = existing?.planOrder ?: dao.nextPlanOrder(),
-                dueDateIso = dueDateIso
+                dueDateIso = dueDateIso,
+                completedAtEpochMillis = existing?.completedAtEpochMillis
             )
         dao.upsert(saved)
         subtaskDao.replaceForTask(saved.id, subtasks.filter { it.title.isNotBlank() }.mapIndexed { index, step ->
@@ -212,7 +217,7 @@ class RoomTaskRepository(private val dao: TaskDao, private val subtaskDao: Subta
     override suspend fun getSubtasks(taskId: String): List<SubtaskEntity> = subtaskDao.getForTask(taskId)
 
     override suspend fun setCompleted(task: TaskEntity, completed: Boolean) {
-        dao.setCompleted(task.id, completed)
+        dao.setCompleted(task.id, completed, if (completed) currentTimeMillis() else null)
     }
 
     override suspend fun deleteTask(id: String) {
@@ -269,6 +274,7 @@ class RoomNoteRepository(private val dao: NoteDao) : NoteRepository {
 interface FocusSessionRepository {
     fun observeActive(): Flow<FocusSessionEntity?>
     fun observeHistory(): Flow<List<FocusSessionEntity>>
+    fun observeAll(): Flow<List<FocusSessionEntity>>
     suspend fun start(durationMinutes: Int, taskId: String?)
     suspend fun pause()
     suspend fun resume()
@@ -279,6 +285,7 @@ interface FocusSessionRepository {
 class RoomFocusSessionRepository(private val dao: FocusSessionDao) : FocusSessionRepository {
     override fun observeActive() = dao.observeActive()
     override fun observeHistory() = dao.observeHistory()
+    override fun observeAll() = dao.observeAll()
     override suspend fun start(durationMinutes: Int, taskId: String?) {
         if (dao.getActive() != null) return
         val now = currentTimeMillis()

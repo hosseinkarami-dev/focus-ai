@@ -51,6 +51,6 @@ class RoomSettingsRepository(private val dao: SettingsDao) : SettingsRepository 
 
     override suspend fun setLanguage(language: String) {
         val current = dao.get() ?: AppSettingsEntity()
-        dao.upsert(current.copy(language = language.takeIf { it in setOf("en", "fa", "es") } ?: "en"))
+        dao.upsert(current.copy(language = language.takeIf { it in setOf("en", "fa", "es", "fr", "ar") } ?: "en"))
     }
 }

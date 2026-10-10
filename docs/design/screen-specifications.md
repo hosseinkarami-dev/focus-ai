@@ -71,7 +71,7 @@ Search and filter chips (All, Open, Completed, Overdue), sort by plan order, dea
 
 ### G. Task details/edit
 
-Title, description, status, priority, optional date-only deadline, estimate, ordered subtasks, and created/updated metadata. Edit in place with Save/Cancel; validation is inline. Complete/undo completion available. Archive is reversible; delete confirms or offers undo, with permanent removal only after confirmation. Empty subtasks show Add step. AI breakdown never mutates existing subtasks without explicit selection and confirmation.
+Open task create/edit as a full-height secondary screen with a pinned app bar and animated forward/back navigation. Include title, description, status, priority, optional calendar-picked date-only deadline, estimate, ordered subtasks, and created/updated metadata. Save/Cancel; validation is inline. Complete/undo completion available. Archive is reversible; delete confirms or offers undo, with permanent removal only after confirmation. Empty subtasks show Add step. AI breakdown never mutates existing subtasks without explicit selection and confirmation.
 
 ### H. Task breakdown
 
@@ -87,11 +87,11 @@ Setup permits optional task selection and duration; untied session is first-clas
 
 ### K. Insights
 
-Period selector (week/month), tasks completed, focus time, average completed session duration, and a simple completion trend. Each metric labels its date window and calculation; zero-data state explains what will be counted. A chart, if later implemented, has title, axis labels, text summary, and accessible data alternative. No composite productivity score or causal claims.
+Insights live inside Focus. The 7-day and 30-day selectors are rolling windows ending now. Show completed task count (only tasks with a recorded completion timestamp), focus time and average session length (saved running time from completed sessions only), completed session count, and a seven-bucket trend for completed sessions. Explain these calculations in the UI. Tasks already completed before schema v9 have no reliable timestamp and are excluded with an explanatory note. Do not show a composite productivity score or make causal claims.
 
 ### L. Settings/profile
 
-Theme: System/Light/Dark with an immediate preview and locally persisted selection. Language offers English, Persian, and Spanish; Persian switches the shared layout to RTL and date labels use the selected locale. Focus default offers 15, 25, 45, or 60 minutes and is reflected on the Focus screen. AI section identifies the current sample mode and states that no service is contacted; when a backend is configured it must explain that note text is sent only after an explicit request. Privacy section explains local storage and clear-data impact. Clear local data requires explicit confirmation and a final destructive action. Show app version and project links when real values are configured. No fake account or subscription UI.
+Theme: System/Light/Dark with an immediate preview and locally persisted selection. Language selection opens a dialog with English, Persian, Spanish, French, and Arabic; Persian and Arabic switch the shared layout to RTL and date labels use the selected locale. Focus default offers 15, 25, 45, or 60 minutes and is reflected on the Focus screen. AI section identifies the current sample mode and states that no service is contacted; when a backend is configured it must explain that note text is sent only after an explicit request. Privacy section explains local storage and clear-data impact. Clear local data requires explicit confirmation and a final destructive action. Show app version and project links when real values are configured. No fake account or subscription UI.
 
 ## Interaction and feedback rules
 
@@ -100,4 +100,6 @@ Theme: System/Light/Dark with an immediate preview and locally persisted selecti
 - Dialog/sheet dismissal preserves draft; destructive discard is explicit.
 - Retry repeats only the failed AI operation using the preserved source and cannot create tasks by itself.
 - Local edits propagate by observing the local store; every destination reflects the same task state.
+- Keep the compact FocusAI top app bar pinned while destination content scrolls. Animate the task FAB away while scrolling down and back in while scrolling up.
 - Touch targets are at least 48dp; labels, status and focus order remain available to assistive technology.
+Focus also includes an explainable rhythm card with rolling 7-day and 30-day filters. It reports completed focus time, completed session count, average completed-session length, timestamped task completions, and a seven-bucket completed-session trend. The window ends now and spans exactly 7×24 or 30×24 hours; trend buckets split that window evenly. Only completed sessions count toward focus metrics. Tasks completed before schema v9 do not have reliable completion timestamps, so they are excluded from the task count and the UI identifies this limit.

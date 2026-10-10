@@ -42,7 +42,7 @@ fun initKoin(platformContext: Any? = null) {
             single<HttpClient> { createHttpClient() }
             factory { TodayViewModel(get(), get(), get()) }
             factory { SettingsViewModel(get()) }
-            factory { FocusViewModel(get()) }
+            factory { FocusViewModel(get(), get()) }
         })
     }
     koinStarted = true

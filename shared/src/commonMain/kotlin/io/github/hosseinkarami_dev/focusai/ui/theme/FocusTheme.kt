@@ -2,10 +2,17 @@ package io.github.hosseinkarami_dev.focusai.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import focusai.shared.generated.resources.Res
+import focusai.shared.generated.resources.manrope
+import focusai.shared.generated.resources.noto_sans_arabic
+import org.jetbrains.compose.resources.Font
 
 private val lightColors = lightColorScheme(
     primary = Color(0xFF5954C8),
@@ -64,11 +71,24 @@ private val darkColors = darkColorScheme(
 )
 
 @Composable
-fun FocusTheme(themeMode: String = "System", content: @Composable () -> Unit) {
+fun FocusTheme(themeMode: String = "System", language: String = "en", content: @Composable () -> Unit) {
     val useDarkTheme = when (themeMode) {
         "Light" -> false
         "Dark" -> true
         else -> isSystemInDarkTheme()
     }
-    MaterialTheme(colorScheme = if (useDarkTheme) darkColors else lightColors, content = content)
+    val family = if (language == "fa" || language == "ar") {
+        FontFamily(Font(Res.font.noto_sans_arabic, FontWeight.Normal), Font(Res.font.noto_sans_arabic, FontWeight.Medium), Font(Res.font.noto_sans_arabic, FontWeight.SemiBold), Font(Res.font.noto_sans_arabic, FontWeight.Bold))
+    } else {
+        FontFamily(Font(Res.font.manrope, FontWeight.Normal), Font(Res.font.manrope, FontWeight.Medium), Font(Res.font.manrope, FontWeight.SemiBold), Font(Res.font.manrope, FontWeight.Bold))
+    }
+    val base = Typography()
+    val typography = base.copy(
+        displayLarge = base.displayLarge.copy(fontFamily = family), displayMedium = base.displayMedium.copy(fontFamily = family), displaySmall = base.displaySmall.copy(fontFamily = family),
+        headlineLarge = base.headlineLarge.copy(fontFamily = family), headlineMedium = base.headlineMedium.copy(fontFamily = family), headlineSmall = base.headlineSmall.copy(fontFamily = family),
+        titleLarge = base.titleLarge.copy(fontFamily = family), titleMedium = base.titleMedium.copy(fontFamily = family), titleSmall = base.titleSmall.copy(fontFamily = family),
+        bodyLarge = base.bodyLarge.copy(fontFamily = family), bodyMedium = base.bodyMedium.copy(fontFamily = family), bodySmall = base.bodySmall.copy(fontFamily = family),
+        labelLarge = base.labelLarge.copy(fontFamily = family), labelMedium = base.labelMedium.copy(fontFamily = family), labelSmall = base.labelSmall.copy(fontFamily = family)
+    )
+    MaterialTheme(colorScheme = if (useDarkTheme) darkColors else lightColors, typography = typography, content = content)
 }

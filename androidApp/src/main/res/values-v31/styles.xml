@@ -1,0 +1,11 @@
+<resources>
+    <style name="FocusAITheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">#F5F4FA</item>
+        <item name="android:navigationBarColor">#F5F4FA</item>
+        <item name="android:windowBackground">#F5F4FA</item>
+        <item name="android:windowSplashScreenBackground">#F5F4FA</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_focusai_splash</item>
+    </style>
+</resources>

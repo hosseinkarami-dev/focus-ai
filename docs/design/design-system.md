@@ -24,13 +24,13 @@ Centralize these semantic tokens in `ui/theme`; these are the encoded light and 
 | `priorityMedium` | `#8A5A11` | `#F0BE68` | Medium priority plus label |
 | `priorityLow` | `#356883` | `#91C9E4` | Low priority plus label |
 
-The FocusAI mark is a soft white focus ring with four alignment ticks and a lilac orbit over indigo, with an apricot center. Source: [`focusai-mark.svg`](assets/focusai-mark.svg); app icons and the Compose mark use the same geometry.
+The FocusAI mark is a soft white focus ring with four alignment ticks and a lilac orbit over indigo, with an apricot center. Source: [`focusai-mark.svg`](assets/focusai-mark.svg); app icons and the Compose mark use the same geometry. iOS uses this mark on its launch storyboard. Android uses a reduced splash rendition that keeps every tick inside the system safe area.
 
 Use Material 3 `ColorScheme` semantic roles where applicable. Priority chips include text; completion includes checkbox state and accessible announcement. Never use hue alone to convey urgency or AI uncertainty.
 
 ## Typography
 
-Use the platform sans-serif default initially to preserve legibility and avoid bundling a font before branding validation. Define semantic Material 3 styles centrally and allow font scaling.
+Use OFL-licensed Manrope for Latin interfaces and Noto Sans Arabic for Arabic and Persian. The font binaries live in shared Compose resources and license files are retained under `assets/fonts`. Define semantic Material 3 styles centrally and allow font scaling.
 
 | Role | Target |
 |---|---|
@@ -59,10 +59,10 @@ Use the platform sans-serif default initially to preserve legibility and avoid b
 - Suggestion panel: explicit “AI suggestion” label, per-field edit controls, uncertainty note beside the affected field, select checkbox, reject action. No provider-specific branding.
 - Confirmation: review count and action consequence; selected tasks save only after explicit confirmation. Destructive remove/archive offers undo when safe; permanent data clear asks for confirmation.
 - Bottom navigation: five labeled destinations with selected semantics; preserve each destination's scroll/query state.
-- Feedback: snackbar for undoable changes; inline error for recoverable network/validation failures with retry where meaningful.
+- Feedback: branded toast-style snackbar for undoable changes; inline error for recoverable network/validation failures with retry where meaningful.
 
 ## Themes and accessibility
 
-System theme is default. Settings can choose Light, Dark, or System and the selected setting persists in Room. English, Persian, and Spanish are available; Persian uses right-to-left layout. The focus length is editable (15, 25, 45, or 60 minutes) and shown on the Focus screen. Map tokens into light and dark Material 3 schemes; do not use dynamic color as the product identity. Verify contrast against WCAG AA targets for normal text (4.5:1) and large text/UI indicators (3:1); test actual rendered colors.
+System theme is default. Settings can choose Light, Dark, or System and the selected setting persists in Room. English, Persian, Spanish, French, and Arabic are available; Persian and Arabic use right-to-left layout. The focus length is editable (15, 25, 45, or 60 minutes) and shown on the Focus screen. Map tokens into light and dark Material 3 schemes; do not use dynamic color as the product identity. Verify contrast against WCAG AA targets for normal text (4.5:1) and large text/UI indicators (3:1); test actual rendered colors.
 
 Every icon-only control has a semantic label, state, and action. Keep focus order aligned with visual order, announce completion and timer state changes, support font scaling without clipping, use content descriptions for meaningful imagery, and honor reduced-motion preferences. Empty illustrations are supplemental; pair them with concise text and an action.

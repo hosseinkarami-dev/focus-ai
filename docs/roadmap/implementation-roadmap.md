@@ -1,10 +1,10 @@
 # Implementation roadmap
 
-The project has completed an initial compatibility and UI foundation pass: Compose Material 3 theme and five tabs, a shared/native FocusAI focus mark, an indigo/lilac light/dark palette with apricot accent, Room 3 task/note/settings/session persistence, Koin, shared MVVM state, Ktor with JSON serialization and a typed HTTPS adapter, Inbox search/status filters/edit/archive/restore/delete, local note dates, task create/edit/delete, task search and status filters, completion Undo with branded feedback, persisted manual task order, optional due dates, task checklist steps, editable theme/language/focus preferences, timestamp-based focus controls and recent session history, English/Persian/Spanish interface copy with RTL for Persian, and a sample-only note suggestion/review flow. No remote AI backend is configured.
+The project has completed an initial compatibility and UI foundation pass: Compose Material 3 theme and five tabs, a shared/native FocusAI focus mark, an indigo/lilac light/dark palette with apricot accent, Room 3 task/note/settings/session persistence, Koin, shared MVVM state, Ktor with JSON serialization and a typed HTTPS adapter, Inbox search/status filters/edit/archive/restore/delete, local note dates, full-height task create/edit screens with calendar date selection, task search and status filters, completion Undo with branded feedback, persisted manual task order, task checklist steps, editable theme/language/focus preferences, timestamp-based focus controls and recent session history, English/Persian/Spanish/French/Arabic interface copy with RTL for Persian and Arabic, Manrope/Noto Sans Arabic typography, explainable 7/30-day focus insights with task-completion timestamps, and a sample-only note suggestion/review flow. No remote AI backend is configured.
 
 ## Phase 0 — Compatibility spike and app foundation
 
-**Status:** library versions are pinned. Room/KSP generation, schema v1→v2→v3→v4→v5→v6→v7→v8 migration generation, Android debug assembly, and iOS simulator shared-source compilation succeeded. System/Light/Dark theme, English/Persian/Spanish language and focus duration preferences are persisted and editable. Navigation currently uses tab selection state; introduce retained per-tab back stacks when nested flows are implemented.
+**Status:** library versions are pinned. Room/KSP generation, schema v1→v2→v3→v4→v5→v6→v7→v8→v9 migration generation, Android debug assembly, iOS simulator shared-source compilation, and the full iOS simulator app build succeeded. System/Light/Dark theme, English/Persian/Spanish/French/Arabic language and focus duration preferences are persisted and editable. The app bar stays pinned; secondary task editing and destination changes animate. Native back handling for nested destinations and retained per-tab scroll state remain future polish.
 
 **Acceptance:** Android and iOS shared app compile; five destinations preserve state; back behavior is defined on both; theme switch renders light/dark/system; no unsupported dependency remains speculative.
 
@@ -18,17 +18,17 @@ The project has completed an initial compatibility and UI foundation pass: Compo
 
 **Work:** Today, Inbox, editor, task list/details, planner order, completion/undo and empty/error states.
 
-**Status:** local notes and task CRUD are implemented. Task search and All/Open/Completed filters are available; task edits retain completion and creation metadata. Completion changes offer Undo, active tasks can be reordered through accessible controls saved in Room, and task details support optional validated dates and editable checklist steps. Inbox supports search, review/archive filters, local update dates, archive/restore, and confirmed permanent deletion. Remaining items include note-delete undo and accessibility review.
+**Status:** local notes and task CRUD are implemented. Task search and All/Open/Completed filters are available; task edits retain completion and creation metadata. Completion changes offer Undo, active tasks can be reordered through accessible controls saved in Room, and the full-height task editor supports calendar-selected dates and editable checklist steps. Inbox supports search, review/archive filters, local update dates, archive/restore, and confirmed permanent deletion. Remaining items include note-delete undo and accessibility review.
 
 **Acceptance:** user can capture a note and create/edit/complete/reorder tasks with no network; state is reflected across entry points; accessibility and large-text behavior reviewed.
 
 ## Phase 3 — Focus and explainable insights
 
-**Status:** focus sessions now persist start, pause, resume, finish and discard transitions in Room. Elapsed time is derived from saved timestamps, sessions optionally link to open tasks, and recent history survives app recreation. The active session is restored from Room when the app starts. Derived insights, period filters, and timer lifecycle verification on devices remain.
+**Status:** focus sessions persist start, pause, resume, finish and discard transitions in Room. Elapsed time is derived from saved timestamps, sessions optionally link to open tasks, and recent history survives app recreation. The active session is restored from Room when the app starts. The Focus screen now shows rolling 7/30-day completed focus minutes, session count, average session length, timestamped task completion count, and a seven-bucket completed-session trend. Task completion timestamps are stored from schema v9 onward; pre-v9 completed tasks have no knowable completion time and are excluded with an explanatory note. Device lifecycle verification remains.
 
 **Work:** persisted timestamp timer transitions, optional task linkage, history, derived metrics and settings/privacy controls.
 
-**Acceptance:** timer survives backgrounding/recreation and uses timestamps; abandon/discard behavior is clear; each metric matches documented records and period semantics.
+**Acceptance:** timer survives backgrounding/recreation and uses timestamps; abandon/discard behavior is clear; each metric matches documented records and period semantics. Insights use rolling windows of exactly 7×24 or 30×24 hours ending at the current time. Trend buckets divide the selected window into seven equal intervals; task completion counts use `completedAtEpochMillis`, while focus metrics include only sessions whose outcome is `COMPLETED` and whose end timestamp is in the selected window. Focus minutes and average length sum `accumulatedRunningMillis`; discarded and incomplete sessions are excluded.
 
 ## Phase 4 — AI contracts and deterministic mock
 
@@ -50,4 +50,4 @@ The project has completed an initial compatibility and UI foundation pass: Compo
 
 ## Dependency order and risks
 
-The selected Room/KSP/Koin/Ktor libraries compile for Android and shared iOS simulator sources with this repository's declared toolchain. Remaining risks include Room schema evolution, retained navigation back-stack parity, Android API 37 availability in CI, and full Xcode app integration. Keep additions in the version catalog and recheck compatibility when upgrading. The repository currently has no Git metadata, so establish version control before implementation work that needs reviewable commits.
+The selected Room/KSP/Koin/Ktor libraries compile for Android and iOS, and the full iOS simulator app target builds. The iOS target reports a bundle identifier validation warning that should be resolved when the product identifier is confirmed for release. Remaining risks include Room schema evolution, retained navigation back-stack parity, Android API 37 availability in CI, release signing and device-level verification. Keep additions in the version catalog and recheck compatibility when upgrading. The repository has Git metadata; current changes are uncommitted.
