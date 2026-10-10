@@ -1,6 +1,6 @@
 # FocusAI
 
-FocusAI is a Kotlin Multiplatform / Compose Multiplatform starter for a local-first productivity app that turns notes into user-reviewed task suggestions. The repository currently contains the generated app shell; the product and design foundation is documented before feature implementation.
+FocusAI is a Kotlin Multiplatform / Compose Multiplatform productivity app that turns notes into user-reviewed task suggestions. Its current shared app supports local task and note capture, Inbox search, task completion, and a clearly labeled sample suggestion flow.
 
 ## Product and engineering documentation
 
@@ -15,7 +15,7 @@ FocusAI is a Kotlin Multiplatform / Compose Multiplatform starter for a local-fi
 
 ## Current project state
 
-The shared module targets Android, iOS arm64, and iOS simulator arm64. The current UI is the generated Compose greeting sample. Persistence, navigation, dependency injection, networking, AI integration, and product screens are not implemented. Declared toolchain and dependency versions are recorded in the architecture document; requested new library compatibility still needs a focused validation before implementation.
+The shared module targets Android, iOS arm64, and iOS simulator arm64. It uses Compose Material 3, shared MVVM state, Koin, Room 3 with bundled SQLite, Ktor with kotlinx.serialization JSON, and Material icon vectors. The FocusAI focus mark is shared by Compose and Android/iOS launchers. An indigo, lilac, and apricot palette supports Light, Dark, and System modes. Tasks, notes, settings, and focus sessions are stored locally; Room schema v8 adds a saved language choice through automatic migrations. Tasks can be created, edited, searched, filtered, completed with Undo, manually reordered, and deleted with confirmation. Inbox notes can be searched, filtered by review/archive status, reopened, edited, archived/restored, and deleted with confirmation. Settings persist appearance, English/Persian/Spanish language, and a 15/25/45/60-minute focus default. Persian enables right-to-left layout, and dates follow the selected language. Focus sessions can be linked to an open task, paused, resumed, finished, or discarded; recent session history survives relaunch. Completion feedback uses a branded toast with Undo. Suggestions use a clearly labeled sample provider, so no note is sent over the network. Explainable activity insights and a secured AI backend remain future work.
 
 ## Running the apps
 

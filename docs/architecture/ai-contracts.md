@@ -2,7 +2,7 @@
 
 ## Provider boundary
 
-The shared domain calls `AiProvider`; it receives normalized domain inputs and returns untrusted suggestion results. It cannot depend on a repository or write local data. Implementations are `MockAiProvider` and `RemoteAiProvider`. Remote calls go to a secure backend; model vendor and credentials remain server-side. Keep transport DTOs in `data/ai/dto`, separate from domain models and presentation state.
+The shared domain calls `AiProvider`; it receives normalized domain inputs and returns untrusted suggestion results. It cannot depend on a repository or write local data. Implementations are a deterministic sample provider and `RemoteAiProvider`. The current remote adapter sends a versioned JSON request over HTTPS and checks response version/request ID, title length, and duplicate titles. Runtime DI deliberately selects the sample provider until a backend endpoint is configured. Model vendor and credentials remain server-side. Move transport DTOs to `data/ai/dto` and separate them from domain models/presentation state as the production feature is expanded.
 
 ## Versioned wire schemas
 

@@ -49,7 +49,7 @@ Header: localized date and concise greeting; no assumed name. Show a small plann
 
 ### C. Smart Inbox
 
-Top search field and fast “Capture a thought” entry. Notes list shows first lines, saved/updated date, and whether unprocessed or analyzed. Note actions: edit, analyze, archive, delete (undo if possible). Filters: All, Unprocessed, Archived; search matches local title/body. Empty state invites writing; offline state permits all local note actions. Search no-result state offers clear query.
+Top search field and fast “Capture a thought” entry. Notes list shows first lines, updated date in the device timezone, and whether unprocessed, reviewed, or archived. Note actions: edit, analyze, archive/restore, and confirmed permanent delete. Filters: All, To review, Reviewed, Archived; search matches local title/body. Empty state invites writing; offline state permits all local note actions. Search/filter no-result state explains how to broaden results.
 
 ### D. Note editor and AI analysis
 
@@ -91,11 +91,11 @@ Period selector (week/month), tasks completed, focus time, average completed ses
 
 ### L. Settings/profile
 
-Theme: System/Light/Dark. Preferences: week start and optional focus default. AI section identifies provider mode/status and explains that note text is sent to configured backend only on request; usage/cost appears only if backend provides verified data. Privacy section explains local storage and clear-data impact. Clear local data requires explicit confirmation and a final destructive action. Show app version and project links when real values are configured. No fake account or subscription UI.
+Theme: System/Light/Dark with an immediate preview and locally persisted selection. Language offers English, Persian, and Spanish; Persian switches the shared layout to RTL and date labels use the selected locale. Focus default offers 15, 25, 45, or 60 minutes and is reflected on the Focus screen. AI section identifies the current sample mode and states that no service is contacted; when a backend is configured it must explain that note text is sent only after an explicit request. Privacy section explains local storage and clear-data impact. Clear local data requires explicit confirmation and a final destructive action. Show app version and project links when real values are configured. No fake account or subscription UI.
 
 ## Interaction and feedback rules
 
-- Complete toggles immediately, announce status, and show Undo.
+- Complete toggles immediately, announce status, and show a branded toast with Undo.
 - Deleting/archive behavior states whether reversible; clearing all data always confirms.
 - Dialog/sheet dismissal preserves draft; destructive discard is explicit.
 - Retry repeats only the failed AI operation using the preserved source and cannot create tasks by itself.

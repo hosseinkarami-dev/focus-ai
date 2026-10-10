@@ -9,5 +9,6 @@ interface Platform {
 
 expect fun getPlatform(): Platform
 
-expect fun currentTimeMillis(): Long
+fun currentTimeMillis(): Long = kotlin.time.Clock.System.now().toEpochMilliseconds()
+expect fun formatEpochDate(epochMillis: Long, language: String = "en"): String
 expect fun createDatabaseBuilder(context: Any? = null): RoomDatabase.Builder<FocusDatabase>

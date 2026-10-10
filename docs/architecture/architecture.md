@@ -2,7 +2,7 @@
 
 ## Repository baseline
 
-The repository is an early Kotlin Multiplatform starter. `shared` targets Android, iOS arm64, and iOS simulator arm64, and already includes Compose Multiplatform, Compose Material 3, Compose UI/runtime/foundation, and lifecycle Compose artifacts. `App.kt` is the generated click-and-greeting sample; there is no app navigation, persistence, domain/data layer, DI, Ktor, Room, Koin, or product feature yet. Android uses a Compose Activity and iOS hosts the shared Compose view through SwiftUI. Existing tests exercise starter greeting behavior only. No `AGENTS.md` or existing product documentation was found. Repository metadata is absent (`.git` was not present in the inspected directory), so a Git change summary is unavailable.
+The repository began as an early Kotlin Multiplatform starter. The current implementation has a Compose Material 3 Today shell, five tab destinations, shared MVVM state, Room 3 task, note, preference, and focus session persistence, Koin wiring, Ktor with kotlinx.serialization JSON, a typed HTTPS `RemoteAiProvider` adapter, and a clearly labeled deterministic sample provider selected at runtime. The FocusAI focus mark appears in shared Compose UI and native app icons; the app uses an indigo/lilac palette with an apricot accent. Android/iOS use native entry points, with database file creation platform-specific. Inbox notes can be captured, searched, filtered by review/archive state, reopened, edited, archived/restored, deleted with confirmation, and sent through an in-app sample suggestion/review flow. Dates follow the selected language and each platform’s local timezone. Tasks support local create/edit/delete, completion with Undo, text search, All/Open/Completed filters, persisted manual order, optional ISO due dates, and editable checklist steps. Settings persist System/Light/Dark appearance, English/Persian/Spanish language and a 15/25/45/60-minute focus default; Persian switches the shared layout to RTL. Focus sessions use saved timestamps for start, pause, resume, finish and discard, may link to a task, restore after app recreation, and appear in recent history. Room schema v8 adds language preference; earlier schema versions add focus sessions, notes, task order, due dates, subtasks, archive state and other preferences, with automatic migrations through v8. Task completion feedback uses a branded toast with Undo. No note is sent to a backend because the sample provider remains active. Derived insights, note delete undo, and secured AI backend integration remain future work. Existing starter tests have not been run for this change.
 
 ## Proposed shared package layout
 
@@ -65,7 +65,7 @@ flowchart LR
 
 ## Local-first and timer behavior
 
-Room is source of truth for notes, tasks, subtasks and sessions. UI observes Flow; network is used only for explicit AI operations. Save drafts locally before analysis. The timer persists each lifecycle transition: start timestamp, pause accumulated duration, resume timestamp, finish timestamp and outcome. On display/reopen derive current elapsed time from accumulated duration plus the difference between a trusted current clock and last resume; clamp invalid negative values and account for process death. Use injected `Clock` for deterministic tests; prefer platform monotonic time for an active process and persisted wall-clock checkpoints for restoration. Do not use a UI coroutine as the authoritative timer.
+Room is source of truth for notes, tasks, subtasks and sessions. UI observes Flow; network is used only for explicit AI operations. Save drafts locally before analysis. The timer persists each lifecycle transition: start timestamp, pause accumulated duration, resume timestamp, finish timestamp and outcome. On display/reopen derive elapsed time from accumulated duration plus the difference between current wall time and last resume; clamp negative intervals. The UI refreshes its display once per second, while Room timestamps remain authoritative through backgrounding and process recreation. Injected clock support and lifecycle/device verification remain follow-up work.
 
 ## State, navigation, errors
 
@@ -77,16 +77,15 @@ Use Compose Multiplatform navigation after validating a library compatible with 
 
 Current catalog versions: Kotlin 2.4.20, AGP 9.1.1, Compose Multiplatform 1.12.1, Material 3 1.12.0-alpha03, Android compile/target 37, min 24. These are what files declare as of repository inspection, not independently validated compatibility claims.
 
-Requested libraries are not present:
+Dependencies added for the representative implementation:
 
-- Room Multiplatform: needed for relational local persistence and observable queries. Before adding, verify current Room KMP plugin/runtime/compiler support for Kotlin 2.4.20, AGP 9.1.1, iOS targets, and the project's Gradle setup.
-- Ktor Client: needed for backend transport on Android and iOS. Verify engine selection and versions; keep engine wiring platform-specific if required.
-- kotlinx.serialization: needed for versioned typed AI payloads. Check whether the serialization compiler plugin must be applied and ensure it matches Kotlin.
-- Koin: needed to swap mock/remote providers and construct shared app graph. Verify KMP APIs/version and avoid platform-specific app startup leakage.
-- Coroutines/Flow: Flow is part of the expected shared reactive model; add explicit aligned dependency if not transitively/explicitly available.
+- Room 3 KMP runtime/compiler plus bundled SQLite driver, with KSP and schema export. Android and iOS paths are separate platform implementations.
+- Ktor Client core, Android and Darwin engines, content negotiation and kotlinx.serialization JSON integration. A typed HTTPS adapter exists, but no backend endpoint is configured and runtime DI selects the sample provider.
+- kotlinx.serialization compiler plugin/JSON runtime and Koin core/Compose/ViewModel packages.
+- Coroutines and Flow are used for state and Room observation; direct declarations remain subject to Gradle dependency resolution through existing shared APIs.
 - Navigation: absent; compare official/available Compose Multiplatform options against tab state, back stack, and iOS behavior before selecting.
 
-No dependencies are added in this design phase. Pin compatible versions in the version catalog and prove Android and iOS compilation in a separate implementation change before relying on them.
+Versions are pinned in the catalog. Android assembly and iOS compilation must be checked against the current project toolchain; any incompatibilities need a deliberate version adjustment rather than silent dependency substitution.
 
 ## Dependency injection and platform responsibilities
 

@@ -1,6 +1,6 @@
 # Testing strategy
 
-Testing is planned for the implementation phase; this design phase has not added tests or run a build. Keep logic deterministic with injected clock, ID generator where helpful, repositories, and provider.
+No new automated tests have been added yet. Android debug assembly and shared iOS simulator source compilation have been run successfully for the current foundation. Keep business logic deterministic with injected clock, ID generator where helpful, repositories, and provider as production flows are added.
 
 ## Unit tests
 

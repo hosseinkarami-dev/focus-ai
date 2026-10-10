@@ -2,29 +2,29 @@
 
 ## Direction
 
-Use a quiet, editorial productivity visual language: warm neutral canvas, deep pine as the action color, clear typography, thin separators, and compact task rows. The visual hierarchy comes from spacing and type rather than gradients, badges everywhere, or large dashboard cards. AI content uses a labeled “Suggested” treatment with an icon and wording so status never depends on color alone.
+Use a quiet, editorial productivity visual language: warm lilac tinted canvas, deep indigo as the action color, clear typography, thin separators, and compact task rows. Apricot provides a warm secondary accent. The visual hierarchy comes from spacing and type rather than badges everywhere or large dashboard cards. AI content uses a labeled “Suggested” treatment with an icon and wording so status never depends on color alone.
 
 ## Color tokens
 
-Centralize these semantic tokens in `ui/theme`; the following hex values are design targets to encode once, not scattered literals. Validate contrast in implementation, including disabled and large-text contexts.
+Centralize these semantic tokens in `ui/theme`; these are the encoded light and dark palettes. Validate contrast in implementation, including disabled and large-text contexts.
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `background` | `#F7F7F2` | `#151916` | App canvas |
-| `surface` | `#FFFFFF` | `#202622` | Sheets and contained surfaces |
-| `surfaceVariant` | `#EEF1EC` | `#29312C` | Quiet supporting surfaces |
-| `primary` | `#245B48` | `#9BD2B4` | Main actions, selected navigation |
-| `onPrimary` | `#FFFFFF` | `#10271D` | Primary action text/icons |
-| `textPrimary` | `#18211C` | `#F0F3EF` | Titles and body |
-| `textSecondary` | `#59645D` | `#B4BEB6` | Supporting copy |
-| `outline` | `#D7DED8` | `#3A443D` | Borders and dividers |
-| `success` | `#28734D` | `#85D3A4` | Completed/saved state |
-| `warning` | `#8A5A11` | `#F0BE68` | Overdue/attention |
-| `error` | `#A33E36` | `#F2A29B` | Invalid/destructive |
-| `information` | `#356883` | `#91C9E4` | Connectivity/help |
-| `priorityHigh` | `#A33E36` | `#F2A29B` | High priority plus “High” label |
+| `background` | `#F5F4FA` | `#141320` | Warm lilac / ink canvas |
+| `surface` | `#FFFEFF` | `#1D1B2A` | Sheets and contained surfaces |
+| `surfaceVariant` | `#ECEBF3` | `#292737` | Quiet supporting surfaces |
+| `primary` | `#5954C8` | `#B9B4FF` | Indigo actions and navigation |
+| `onPrimary` | `#FFFFFF` | `#211B5E` | Primary action text/icons |
+| `textPrimary` | `#201F2D` | `#E8E6F3` | Titles and body |
+| `textSecondary` | `#64627A` | `#C7C4D8` | Supporting copy |
+| `outline` | `#777487` | `#918EA3` | Borders and dividers |
+| `tertiary` | `#D66B55` | `#FFB49C` | Apricot accent |
+| `error` | `#B33D36` | `#FFB4AB` | Invalid/destructive |
+| `priorityHigh` | `#B33D36` | `#FFB4AB` | High priority plus “High” label |
 | `priorityMedium` | `#8A5A11` | `#F0BE68` | Medium priority plus label |
 | `priorityLow` | `#356883` | `#91C9E4` | Low priority plus label |
+
+The FocusAI mark is a soft white focus ring with four alignment ticks and a lilac orbit over indigo, with an apricot center. Source: [`focusai-mark.svg`](assets/focusai-mark.svg); app icons and the Compose mark use the same geometry.
 
 Use Material 3 `ColorScheme` semantic roles where applicable. Priority chips include text; completion includes checkbox state and accessible announcement. Never use hue alone to convey urgency or AI uncertainty.
 
@@ -63,6 +63,6 @@ Use the platform sans-serif default initially to preserve legibility and avoid b
 
 ## Themes and accessibility
 
-System theme is default. Settings can choose Light, Dark, or System and the selected setting persists locally. Map tokens into light and dark Material 3 schemes; do not use dynamic color as the product identity. Verify contrast against WCAG AA targets for normal text (4.5:1) and large text/UI indicators (3:1); test actual rendered colors.
+System theme is default. Settings can choose Light, Dark, or System and the selected setting persists in Room. English, Persian, and Spanish are available; Persian uses right-to-left layout. The focus length is editable (15, 25, 45, or 60 minutes) and shown on the Focus screen. Map tokens into light and dark Material 3 schemes; do not use dynamic color as the product identity. Verify contrast against WCAG AA targets for normal text (4.5:1) and large text/UI indicators (3:1); test actual rendered colors.
 
 Every icon-only control has a semantic label, state, and action. Keep focus order aligned with visual order, announce completion and timer state changes, support font scaling without clipping, use content descriptions for meaningful imagery, and honor reduced-motion preferences. Empty illustrations are supplemental; pair them with concise text and an action.
