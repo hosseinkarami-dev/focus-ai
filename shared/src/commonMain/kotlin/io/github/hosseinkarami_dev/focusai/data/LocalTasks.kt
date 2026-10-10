@@ -239,6 +239,7 @@ class RoomTaskRepository(private val dao: TaskDao, private val subtaskDao: Subta
 interface NoteRepository {
     fun observeNotes(): Flow<List<NoteEntity>>
     suspend fun saveNote(body: String, existing: NoteEntity? = null): NoteEntity
+    suspend fun restoreNote(note: NoteEntity)
     suspend fun markProcessed(id: String)
     suspend fun setArchived(id: String, archived: Boolean)
     suspend fun deleteNote(id: String)
@@ -256,6 +257,10 @@ class RoomNoteRepository(private val dao: NoteDao) : NoteRepository {
             updatedAtEpochMillis = now,
             processed = existing?.processed ?: false
         ).also { dao.upsert(it) }
+    }
+
+    override suspend fun restoreNote(note: NoteEntity) {
+        dao.upsert(note)
     }
 
     override suspend fun markProcessed(id: String) {

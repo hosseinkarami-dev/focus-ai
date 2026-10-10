@@ -52,6 +52,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -177,9 +179,19 @@ internal fun TaskRow(
     canMoveDown: Boolean = false,
     onMove: ((Int) -> Unit)? = null
 ) {
+    val language = LocalAppLanguage.current
     Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = task.completed, onCheckedChange = { onToggle(task) })
+            Checkbox(
+                checked = task.completed,
+                onCheckedChange = { onToggle(task) },
+                modifier = Modifier.semantics {
+                    contentDescription = localizedText(
+                        if (task.completed) "Reopen task" else "Complete task",
+                        language
+                    ) + ": ${task.title}"
+                }
+            )
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f).clickable { onEdit(task) }.padding(vertical = 4.dp)) {
                 FocusText(task.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None, color = if (task.completed) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface)
@@ -203,14 +215,14 @@ internal fun TaskRow(
             if (onMove != null && !task.completed && (canMoveUp || canMoveDown)) {
                 Column {
                     IconButton(onClick = { onMove(-1) }, enabled = canMoveUp, modifier = Modifier.size(34.dp)) {
-                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = localizedText("Move ${task.title} up", LocalAppLanguage.current), tint = MaterialTheme.colorScheme.secondary)
+                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = localizedText("Move task up", language) + ": ${task.title}", tint = MaterialTheme.colorScheme.secondary)
                     }
                     IconButton(onClick = { onMove(1) }, enabled = canMoveDown, modifier = Modifier.size(34.dp)) {
-                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = localizedText("Move ${task.title} down", LocalAppLanguage.current), tint = MaterialTheme.colorScheme.secondary)
+                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = localizedText("Move task down", language) + ": ${task.title}", tint = MaterialTheme.colorScheme.secondary)
                     }
                 }
             }
-            IconButton(onClick = { onEdit(task) }) { Icon(Icons.Filled.ChevronRight, contentDescription = localizedText("Edit ${task.title}", LocalAppLanguage.current), tint = MaterialTheme.colorScheme.secondary) }
+            IconButton(onClick = { onEdit(task) }) { Icon(Icons.Filled.ChevronRight, contentDescription = localizedText("Edit task", language) + ": ${task.title}", tint = MaterialTheme.colorScheme.secondary) }
         }
     }
 }

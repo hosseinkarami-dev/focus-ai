@@ -5,6 +5,8 @@ import androidx.compose.runtime.setValue
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -44,6 +47,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -55,12 +59,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.hosseinkarami_dev.focusai.data.TaskEntity
@@ -113,6 +120,12 @@ fun App() {
         var noteToEdit by remember { mutableStateOf<NoteEntity?>(null) }
         var review by remember { mutableStateOf<ReviewDraft?>(null) }
         var fabVisible by remember { mutableStateOf(true) }
+        val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+        val appBarScrolled = topAppBarScrollBehavior.state.contentOffset < 0f
+        val appBarElevation by animateDpAsState(
+            targetValue = if (appBarScrolled) 5.dp else 0.dp,
+            label = "app bar elevation"
+        )
         val fabScrollConnection = remember {
             object : NestedScrollConnection {
                 override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
@@ -122,7 +135,13 @@ fun App() {
                 }
             }
         }
-        LaunchedEffect(destination, showTaskEditor) { fabVisible = true }
+        LaunchedEffect(destination, showTaskEditor) {
+            fabVisible = true
+            if (!showTaskEditor) {
+                topAppBarScrollBehavior.state.contentOffset = 0f
+                topAppBarScrollBehavior.state.heightOffset = 0f
+            }
+        }
 
         val onToggleTask: (TaskEntity) -> Unit = { task ->
             val nextCompleted = !task.completed
@@ -140,35 +159,10 @@ fun App() {
         }
 
         Scaffold(
-            modifier = Modifier.nestedScroll(fabScrollConnection),
+            modifier = Modifier
+                .nestedScroll(fabScrollConnection)
+                .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
             containerColor = MaterialTheme.colorScheme.background,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        if (showTaskEditor) FocusText(if (taskToEdit == null) "New task" else "Task details", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                        else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            FocusAiMark(34.dp)
-                            FocusText("FocusAI", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        }
-                    },
-                    navigationIcon = {
-                        if (showTaskEditor) IconButton(onClick = { showTaskEditor = false; taskToEdit = null }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = localizedText("Back", preferences.language))
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-                )
-            },
-            snackbarHost = { SnackbarHost(snackbarHostState) { data ->
-                Surface(color = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer, shape = RoundedCornerShape(18.dp), shadowElevation = 8.dp) {
-                    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        FocusText(data.visuals.message, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                        data.visuals.actionLabel?.let { label -> TextButton(onClick = data::performAction) { FocusText(label, color = MaterialTheme.colorScheme.primary) } }
-                        if (data.visuals.withDismissAction) IconButton(onClick = data::dismiss) { Icon(Icons.Filled.Close, contentDescription = localizedText("Dismiss", preferences.language)) }
-                    }
-                }
-            } },
             bottomBar = if (!showTaskEditor) ({
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                     Destination.entries.forEach { item ->
@@ -206,7 +200,9 @@ fun App() {
                 }
             }
         ) { padding ->
+          Box(Modifier.fillMaxSize()) {
             AnimatedContent(
+                modifier = Modifier.fillMaxSize(),
                 targetState = if (showTaskEditor) "TaskEditor" else destination,
                 transitionSpec = {
                     val enteringFromRight = targetState == "TaskEditor"
@@ -239,9 +235,20 @@ fun App() {
                 Destination.Inbox -> InboxScreen(
                     notes = notes,
                     padding = padding,
-                    onCapture = { noteToEdit = null; showCapture = true },
                     onOpenNote = { note -> noteToEdit = note; showCapture = true },
-                    onDeleteNote = { note -> viewModel.deleteNote(note.id) },
+                    onDeleteNote = { note ->
+                        scope.launch {
+                            viewModel.deleteNote(note.id)
+                            val result = snackbarHostState.showSnackbar(
+                                message = localizedText("Note deleted", preferences.language),
+                                actionLabel = localizedText("Undo", preferences.language),
+                                withDismissAction = true
+                            )
+                            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                                viewModel.restoreNote(note)
+                            }
+                        }
+                    },
                     onArchiveNote = { note, archived -> viewModel.setNoteArchived(note.id, archived) }
                 )
                 Destination.Focus -> {
@@ -267,6 +274,82 @@ fun App() {
                 )
             }
             }
+            AnimatedVisibility(
+                visible = showTaskEditor || appBarScrolled,
+                modifier = Modifier.align(Alignment.TopCenter).zIndex(1f),
+                enter = fadeIn() + slideInVertically { -it / 3 },
+                exit = fadeOut() + slideOutVertically { -it / 3 }
+            ) {
+                TopAppBar(
+                    modifier = Modifier.shadow(appBarElevation),
+                    title = {
+                        if (showTaskEditor) {
+                            FocusText(if (taskToEdit == null) "New task" else "Task details", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                        } else {
+                            AnimatedVisibility(
+                                visible = appBarScrolled,
+                                enter = fadeIn() + slideInVertically { -it / 3 },
+                                exit = fadeOut() + slideOutVertically { -it / 3 }
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    FocusAiMark(34.dp)
+                                    FocusText("FocusAI", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    },
+                    navigationIcon = {
+                        if (showTaskEditor) IconButton(onClick = { showTaskEditor = false; taskToEdit = null }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = localizedText("Back", preferences.language))
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    scrollBehavior = topAppBarScrollBehavior
+                )
+            }
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = if (showTaskEditor || appBarScrolled) 76.dp else 12.dp
+                    )
+                    .zIndex(2f)
+            ) { data ->
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    shape = RoundedCornerShape(18.dp),
+                    shadowElevation = 8.dp
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        FocusText(data.visuals.message, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                        data.visuals.actionLabel?.let { label ->
+                            TextButton(onClick = data::performAction) {
+                                FocusText(label, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                        if (data.visuals.withDismissAction) {
+                            IconButton(onClick = data::dismiss) {
+                                Icon(Icons.Filled.Close, contentDescription = localizedText("Dismiss", preferences.language))
+                            }
+                        }
+                    }
+                }
+            }
+          }
         }
 
         if (showLanguageDialog) LanguagePickerDialog(

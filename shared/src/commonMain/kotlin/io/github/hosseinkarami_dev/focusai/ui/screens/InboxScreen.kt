@@ -23,14 +23,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -55,7 +53,7 @@ import io.github.hosseinkarami_dev.focusai.ui.LocalAppLanguage
 import io.github.hosseinkarami_dev.focusai.ui.localizedText
 
 @Composable
-internal fun InboxScreen(notes: List<NoteEntity>, padding: PaddingValues, onCapture: () -> Unit, onOpenNote: (NoteEntity) -> Unit, onDeleteNote: (NoteEntity) -> Unit, onArchiveNote: (NoteEntity, Boolean) -> Unit) {
+internal fun InboxScreen(notes: List<NoteEntity>, padding: PaddingValues, onOpenNote: (NoteEntity) -> Unit, onDeleteNote: (NoteEntity) -> Unit, onArchiveNote: (NoteEntity, Boolean) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf("All") }
     var noteToDelete by remember { mutableStateOf<NoteEntity?>(null) }
@@ -99,8 +97,6 @@ internal fun InboxScreen(notes: List<NoteEntity>, padding: PaddingValues, onCapt
                 FocusText("Your inbox is clear", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(6.dp))
                 FocusText("Drop in a thought whenever it arrives.\nIt’ll be here when you need it.", color = MaterialTheme.colorScheme.secondary, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(14.dp))
-                Button(onClick = onCapture, shape = RoundedCornerShape(14.dp)) { Icon(Icons.Filled.Add, null); Spacer(Modifier.width(8.dp)); FocusText("Capture a thought") }
             }
         } else if (visibleNotes.isEmpty()) {
             Column(Modifier.fillMaxWidth().weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -121,7 +117,10 @@ internal fun InboxScreen(notes: List<NoteEntity>, padding: PaddingValues, onCapt
                                 IconButton(onClick = { onArchiveNote(note, !note.archived) }, modifier = Modifier.size(36.dp)) {
                                     Icon(
                                         imageVector = if (note.archived) Icons.Filled.Unarchive else Icons.Filled.Archive,
-                                        contentDescription = if (note.archived) "Restore note" else "Archive note",
+                                        contentDescription = localizedText(
+                                            if (note.archived) "Restore note" else "Archive note",
+                                            LocalAppLanguage.current
+                                        ),
                                         tint = MaterialTheme.colorScheme.secondary
                                     )
                                 }

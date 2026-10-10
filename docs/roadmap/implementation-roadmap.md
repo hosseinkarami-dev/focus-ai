@@ -18,9 +18,9 @@ The project has completed an initial compatibility and UI foundation pass: Compo
 
 **Work:** Today, Inbox, editor, task list/details, planner order, completion/undo and empty/error states.
 
-**Status:** local notes and task CRUD are implemented. Task search and All/Open/Completed filters are available; task edits retain completion and creation metadata. Completion changes offer Undo, active tasks can be reordered through accessible controls saved in Room, and the full-height task editor supports calendar-selected dates and editable checklist steps. Inbox supports search, review/archive filters, local update dates, archive/restore, and confirmed permanent deletion. Remaining items include note-delete undo and accessibility review.
+**Status:** local notes and task CRUD are implemented. Task search and All/Open/Completed filters are available; task edits retain completion and creation metadata. Completion changes offer Undo, active tasks can be reordered through accessible controls saved in Room, and the full-height task editor supports calendar-selected dates and editable checklist steps. Inbox supports search, review/archive filters, local update dates, archive/restore, and confirmed permanent deletion with an Undo action that restores the complete Room entity. Screen-reader labels now cover task completion, reorder, edit, archive, restore, and delete actions in all five interface languages. Platform-level touch-target, screen-reader-order, and larger-text checks remain.
 
-**Acceptance:** user can capture a note and create/edit/complete/reorder tasks with no network; state is reflected across entry points; accessibility and large-text behavior reviewed.
+**Acceptance:** user can capture a note and create/edit/complete/reorder tasks with no network; state is reflected across entry points; accessibility and large-text behavior reviewed on supported platforms.
 
 ## Phase 3 — Focus and explainable insights
 

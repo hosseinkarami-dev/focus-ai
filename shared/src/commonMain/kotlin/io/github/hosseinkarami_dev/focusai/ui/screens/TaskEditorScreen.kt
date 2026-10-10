@@ -98,10 +98,11 @@ internal fun TaskEditorScreen(
             }
         }
     }
-    Column(
-        Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Column(Modifier.fillMaxSize().padding(padding).padding(top = 64.dp).imePadding()) {
+      Column(
+          Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp),
+          verticalArrangement = Arrangement.spacedBy(16.dp)
+      ) {
         Spacer(Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.size(54.dp)) {
@@ -160,7 +161,8 @@ internal fun TaskEditorScreen(
             }
         }
         saveError?.let { FocusText(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-        Row(Modifier.fillMaxWidth().padding(bottom = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+      }
+      Row(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             TextButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { FocusText("Cancel") }
             Button(
                 onClick = {
@@ -181,7 +183,7 @@ internal fun TaskEditorScreen(
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(vertical = 15.dp)
             ) { if (saving) CircularProgressIndicator(Modifier.size(17.dp), strokeWidth = 2.dp) else FocusText(if (task == null) "Add task" else "Save changes") }
-        }
+      }
     }
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(initialSelectedDateMillis = isoDateToEpochMillis(dueDate.takeIf { it.isNotBlank() }))

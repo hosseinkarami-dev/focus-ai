@@ -51,7 +51,9 @@ class TodayViewModel(
 
     suspend fun saveNote(body: String, existing: NoteEntity? = null): NoteEntity = notes.saveNote(body, existing)
 
-    fun deleteNote(id: String) = viewModelScope.launch { notes.deleteNote(id) }
+    suspend fun deleteNote(id: String) = notes.deleteNote(id)
+
+    suspend fun restoreNote(note: NoteEntity) = notes.restoreNote(note)
 
     fun setNoteArchived(id: String, archived: Boolean) = viewModelScope.launch { notes.setArchived(id, archived) }
 
