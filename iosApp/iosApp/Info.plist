@@ -4,5 +4,37 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>io.github.hosseinkarami_dev.focusai</string>
+			<key>CFBundleURLSchemes</key>
+			<array><string>focusai</string></array>
+		</dict>
+	</array>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>io.github.hosseinkarami_dev.focusai.ADD_TASK</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Add task</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Create a task in FocusAI</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeAdd</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>io.github.hosseinkarami_dev.focusai.CAPTURE_NOTE</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Capture thought</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Save a thought in FocusAI</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeCompose</string>
+		</dict>
+	</array>
 </dict>
 </plist>

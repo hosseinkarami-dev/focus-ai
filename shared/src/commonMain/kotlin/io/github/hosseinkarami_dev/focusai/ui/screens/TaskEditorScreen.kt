@@ -7,6 +7,7 @@ import io.github.hosseinkarami_dev.focusai.ui.FocusText
 import io.github.hosseinkarami_dev.focusai.ui.SectionCard
 import io.github.hosseinkarami_dev.focusai.formatEpochDate
 import io.github.hosseinkarami_dev.focusai.isoDateToEpochMillis
+import io.github.hosseinkarami_dev.focusai.rememberNotificationPermissionRequester
 import io.github.hosseinkarami_dev.focusai.epochMillisToIsoDate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,8 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -43,6 +46,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -69,22 +74,30 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 internal fun TaskEditorScreen(
     task: TaskEntity?,
+    initialDueDateIso: String?,
     padding: PaddingValues,
     onDismiss: () -> Unit,
-    onSave: suspend (String, String, String, Int, String?, List<TaskStepDraft>) -> Unit,
+    onSave: suspend (String, String, String, Int, String?, String?, String?, List<TaskStepDraft>) -> Boolean,
+    onOpenNotificationSettings: () -> Unit,
     onDelete: (TaskEntity) -> Unit
 ) {
     val vm = koinViewModel<TodayViewModel>()
     val scope = rememberCoroutineScope()
+    val requestNotificationPermission = rememberNotificationPermissionRequester()
     var title by rememberSaveable(task?.id) { mutableStateOf(task?.title.orEmpty()) }
     var details by rememberSaveable(task?.id) { mutableStateOf(task?.details.orEmpty()) }
     var priority by rememberSaveable(task?.id) { mutableStateOf(task?.priority ?: "Medium") }
     var estimate by rememberSaveable(task?.id) { mutableStateOf((task?.estimateMinutes ?: 25).toString()) }
-    var dueDate by rememberSaveable(task?.id) { mutableStateOf(task?.dueDateIso.orEmpty()) }
+    var dueDate by rememberSaveable(task?.id, initialDueDateIso) { mutableStateOf(task?.dueDateIso ?: initialDueDateIso.orEmpty()) }
+    var recurrence by rememberSaveable(task?.id) { mutableStateOf(task?.recurrenceRule ?: "NONE") }
+    var reminderTime by rememberSaveable(task?.id) { mutableStateOf(task?.reminderTimeLocal.orEmpty()) }
+    var showReminderTimePicker by remember { mutableStateOf(false) }
     val subtasks = remember(task?.id) { mutableStateListOf<TaskStepDraft>() }
     var loadingSubtasks by remember(task?.id) { mutableStateOf(task != null) }
     var saving by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
+    var showNotificationSettings by remember { mutableStateOf(false) }
+    var notificationPermissionDenied by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     val estimateValue = estimate.toIntOrNull()
@@ -142,8 +155,53 @@ internal fun TaskEditorScreen(
                             fontWeight = FontWeight.Medium
                         )
                     }
-                    if (dueDate.isNotBlank()) IconButton(onClick = { dueDate = "" }) { Icon(Icons.Filled.Close, contentDescription = localizedText("Clear date", LocalAppLanguage.current)) }
+                    if (dueDate.isNotBlank()) IconButton(onClick = { dueDate = ""; reminderTime = "" }) { Icon(Icons.Filled.Close, contentDescription = localizedText("Clear date", LocalAppLanguage.current)) }
                 }
+            }
+            FocusText(localizedText("Reminder", LocalAppLanguage.current), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = {
+                    showNotificationSettings = false
+                    notificationPermissionDenied = false
+                    requestNotificationPermission { granted ->
+                        if (granted) showReminderTimePicker = true else {
+                            notificationPermissionDenied = true
+                            showNotificationSettings = true
+                        }
+                    }
+                }, enabled = dueDate.isNotBlank()) {
+                    Icon(Icons.Filled.NotificationsNone, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    FocusText(if (reminderTime.isBlank()) localizedText("Choose reminder time", LocalAppLanguage.current) else "${localizedText("Reminder", LocalAppLanguage.current)} · ${formatReminderTime(reminderTime)}")
+                }
+                if (reminderTime.isNotBlank()) {
+                    IconButton(onClick = { reminderTime = "" }) {
+                        Icon(Icons.Filled.Close, contentDescription = localizedText("Clear reminder", LocalAppLanguage.current))
+                    }
+                }
+            }
+            if (dueDate.isBlank()) FocusText(localizedText("Choose a due date before setting a reminder.", LocalAppLanguage.current), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+            if (showNotificationSettings) {
+                val message = if (notificationPermissionDenied) {
+                    "Notification access is off. Allow notifications to receive reminders."
+                } else {
+                    "Couldn’t schedule the reminder. Check notification access and choose a future time."
+                }
+                FocusText(localizedText(message, LocalAppLanguage.current), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = onOpenNotificationSettings) { FocusText(localizedText("Notification settings", LocalAppLanguage.current)) }
+            }
+            FocusText(localizedText("Repeat", LocalAppLanguage.current), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf("NONE", "DAILY", "WEEKLY", "MONTHLY").forEach { rule ->
+                    FilterChip(
+                        selected = recurrence == rule,
+                        onClick = { recurrence = rule },
+                        label = { FocusText(localizedText(if (rule == "NONE") "Never" else rule.lowercase().replaceFirstChar(Char::uppercase), LocalAppLanguage.current)) }
+                    )
+                }
+            }
+            if (recurrence != "NONE" && dueDate.isBlank()) {
+                FocusText("Choose a due date to repeat this task.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             }
         }
         SectionCard(title = "Steps", subtitle = "Break the task into smaller wins when it helps.") {
@@ -169,7 +227,11 @@ internal fun TaskEditorScreen(
                     saving = true
                     scope.launch {
                         try {
-                            onSave(title, details, priority, estimateValue!!, dueDate.takeIf { it.isNotBlank() }, subtasks.toList())
+                            val success = onSave(title, details, priority, estimateValue!!, dueDate.takeIf { it.isNotBlank() }, recurrence.takeUnless { it == "NONE" }, reminderTime.takeIf { it.isNotBlank() }, subtasks.toList())
+                            saving = false
+                            showNotificationSettings = !success && reminderTime.isNotBlank()
+                            notificationPermissionDenied = false
+                            if (!success && reminderTime.isBlank()) saveError = "Couldn’t save this task. Please try again."
                         } catch (cancelled: CancellationException) {
                             throw cancelled
                         } catch (_: Throwable) {
@@ -179,11 +241,31 @@ internal fun TaskEditorScreen(
                     }
                 },
                 modifier = Modifier.weight(1.5f),
-                enabled = title.isNotBlank() && estimateValue != null && estimateValue in 5..1440 && !loadingSubtasks && !saving,
+                enabled = title.isNotBlank() && estimateValue != null && estimateValue in 5..1440 && (recurrence == "NONE" || dueDate.isNotBlank()) && (reminderTime.isBlank() || dueDate.isNotBlank()) && !loadingSubtasks && !saving,
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(vertical = 15.dp)
             ) { if (saving) CircularProgressIndicator(Modifier.size(17.dp), strokeWidth = 2.dp) else FocusText(if (task == null) "Add task" else "Save changes") }
       }
+    }
+    if (showReminderTimePicker) {
+        val pieces = reminderTime.split(":")
+        val timePickerState = rememberTimePickerState(
+            initialHour = pieces.getOrNull(0)?.toIntOrNull() ?: 9,
+            initialMinute = pieces.getOrNull(1)?.toIntOrNull() ?: 0,
+            is24Hour = false
+        )
+        AlertDialog(
+            onDismissRequest = { showReminderTimePicker = false },
+            title = { FocusText(localizedText("Reminder time", LocalAppLanguage.current)) },
+            text = { TimePicker(state = timePickerState) },
+            confirmButton = { TextButton(onClick = {
+                reminderTime = "${timePickerState.hour.toString().padStart(2, '0')}:${timePickerState.minute.toString().padStart(2, '0')}"
+                showReminderTimePicker = false
+                showNotificationSettings = false
+                notificationPermissionDenied = false
+            }) { FocusText(localizedText("Select time", LocalAppLanguage.current)) } },
+            dismissButton = { TextButton(onClick = { showReminderTimePicker = false }) { FocusText("Cancel") } }
+        )
     }
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(initialSelectedDateMillis = isoDateToEpochMillis(dueDate.takeIf { it.isNotBlank() }))
@@ -209,4 +291,13 @@ internal fun TaskEditorScreen(
             shape = RoundedCornerShape(24.dp)
         )
     }
+}
+
+private fun formatReminderTime(value: String): String {
+    val parts = value.split(":")
+    val hour = parts.getOrNull(0)?.toIntOrNull() ?: return value
+    val minute = parts.getOrNull(1)?.toIntOrNull() ?: return value
+    val suffix = if (hour < 12) "AM" else "PM"
+    val displayHour = when (hour % 12) { 0 -> 12; else -> hour % 12 }
+    return "$displayHour:${minute.toString().padStart(2, '0')} $suffix"
 }

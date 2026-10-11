@@ -30,7 +30,10 @@ data class TaskEntity(
     val createdAtEpochMillis: Long,
     @ColumnInfo(defaultValue = "0") val planOrder: Int = 0,
     val dueDateIso: String? = null,
-    val completedAtEpochMillis: Long? = null
+    val completedAtEpochMillis: Long? = null,
+    val recurrenceRule: String? = null,
+    val spawnedFromTaskId: String? = null,
+    val reminderTimeLocal: String? = null
 )
 
 @Entity(
@@ -78,8 +81,14 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE completed = 0 ORDER BY planOrder ASC, createdAtEpochMillis ASC")
     suspend fun getOpenTasksInPlanOrder(): List<TaskEntity>
 
+    @Query("SELECT * FROM tasks WHERE completed = 0 ORDER BY CASE WHEN dueDateIso IS NULL THEN 1 ELSE 0 END, dueDateIso ASC, planOrder ASC, createdAtEpochMillis ASC LIMIT 3")
+    suspend fun getWidgetTasks(): List<TaskEntity>
+
     @Query("SELECT COALESCE(MAX(planOrder), -1) + 1 FROM tasks WHERE completed = 0")
     suspend fun nextPlanOrder(): Int
+
+    @Query("SELECT * FROM tasks WHERE completed = 0 AND dueDateIso IS NOT NULL AND reminderTimeLocal IS NOT NULL")
+    suspend fun getOpenTasksWithReminders(): List<TaskEntity>
 
     @Query("UPDATE tasks SET planOrder = :order WHERE id = :id")
     suspend fun setPlanOrder(id: String, order: Int)
@@ -97,6 +106,9 @@ interface TaskDao {
 
     @Query("DELETE FROM tasks WHERE id = :id")
     suspend fun delete(id: String)
+
+    @Query("SELECT * FROM tasks WHERE spawnedFromTaskId = :taskId LIMIT 1")
+    suspend fun getNextOccurrence(taskId: String): TaskEntity?
 }
 
 @Dao
@@ -153,9 +165,9 @@ interface FocusSessionDao {
 
 @Database(
     entities = [TaskEntity::class, NoteEntity::class, SubtaskEntity::class, AppSettingsEntity::class, FocusSessionEntity::class],
-    version = 9,
+    version = 12,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9)]
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4), AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9), AutoMigration(from = 9, to = 10), AutoMigration(from = 10, to = 11), AutoMigration(from = 11, to = 12)]
 )
 @ConstructedBy(FocusDatabaseConstructor::class)
 abstract class FocusDatabase : RoomDatabase() {
@@ -165,6 +177,8 @@ abstract class FocusDatabase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDao
     abstract fun focusSessionDao(): FocusSessionDao
 }
+
+expect suspend fun loadWidgetTaskTitles(): List<String>
 
 @Suppress("KotlinNoActualForExpect")
 expect object FocusDatabaseConstructor : RoomDatabaseConstructor<FocusDatabase> {
@@ -179,17 +193,17 @@ fun createFocusDatabase(builder: RoomDatabase.Builder<FocusDatabase>): FocusData
 
 interface TaskRepository {
     fun observeTasks(): Flow<List<TaskEntity>>
-    suspend fun saveTask(title: String, details: String = "", priority: String = "Medium", estimateMinutes: Int = 25, dueDateIso: String? = null, subtasks: List<TaskStepDraft> = emptyList(), existing: TaskEntity? = null)
+    suspend fun saveTask(title: String, details: String = "", priority: String = "Medium", estimateMinutes: Int = 25, dueDateIso: String? = null, recurrenceRule: String? = null, reminderTimeLocal: String? = null, subtasks: List<TaskStepDraft> = emptyList(), existing: TaskEntity? = null): Boolean
     suspend fun getSubtasks(taskId: String): List<SubtaskEntity>
     suspend fun setCompleted(task: TaskEntity, completed: Boolean)
     suspend fun deleteTask(id: String)
     suspend fun moveTask(id: String, direction: Int)
 }
 
-class RoomTaskRepository(private val dao: TaskDao, private val subtaskDao: SubtaskDao) : TaskRepository {
+class RoomTaskRepository(private val dao: TaskDao, private val subtaskDao: SubtaskDao, private val reminderScheduler: io.github.hosseinkarami_dev.focusai.TaskReminderScheduler) : TaskRepository {
     override fun observeTasks(): Flow<List<TaskEntity>> = dao.observeAll()
 
-    override suspend fun saveTask(title: String, details: String, priority: String, estimateMinutes: Int, dueDateIso: String?, subtasks: List<TaskStepDraft>, existing: TaskEntity?) {
+    override suspend fun saveTask(title: String, details: String, priority: String, estimateMinutes: Int, dueDateIso: String?, recurrenceRule: String?, reminderTimeLocal: String?, subtasks: List<TaskStepDraft>, existing: TaskEntity?): Boolean {
         val saved = TaskEntity(
                 id = existing?.id ?: "task-${currentTimeMillis()}-$title".hashCode().toString(),
                 title = title.trim(),
@@ -200,7 +214,10 @@ class RoomTaskRepository(private val dao: TaskDao, private val subtaskDao: Subta
                 createdAtEpochMillis = existing?.createdAtEpochMillis ?: currentTimeMillis(),
                 planOrder = existing?.planOrder ?: dao.nextPlanOrder(),
                 dueDateIso = dueDateIso,
-                completedAtEpochMillis = existing?.completedAtEpochMillis
+                completedAtEpochMillis = existing?.completedAtEpochMillis,
+                recurrenceRule = recurrenceRule,
+                spawnedFromTaskId = existing?.spawnedFromTaskId,
+                reminderTimeLocal = reminderTimeLocal
             )
         dao.upsert(saved)
         subtaskDao.replaceForTask(saved.id, subtasks.filter { it.title.isNotBlank() }.mapIndexed { index, step ->
@@ -212,16 +229,53 @@ class RoomTaskRepository(private val dao: TaskDao, private val subtaskDao: Subta
                 position = index
             )
         })
+        reminderScheduler.cancel(saved.id)
+        return if (saved.completed || saved.dueDateIso == null || saved.reminderTimeLocal == null) true
+        else reminderScheduler.schedule(saved.id, saved.title, saved.dueDateIso, saved.reminderTimeLocal)
     }
 
     override suspend fun getSubtasks(taskId: String): List<SubtaskEntity> = subtaskDao.getForTask(taskId)
 
     override suspend fun setCompleted(task: TaskEntity, completed: Boolean) {
         dao.setCompleted(task.id, completed, if (completed) currentTimeMillis() else null)
+        if (completed) {
+            reminderScheduler.cancel(task.id)
+            val nextDate = task.dueDateIso?.let { io.github.hosseinkarami_dev.focusai.nextDueDate(it, task.recurrenceRule) }
+            if (nextDate != null && task.recurrenceRule != null) {
+                val nextId = "${task.id}-next-${nextDate}"
+                val next = task.copy(
+                    id = nextId,
+                    completed = false,
+                    createdAtEpochMillis = currentTimeMillis(),
+                    planOrder = dao.nextPlanOrder(),
+                    dueDateIso = nextDate,
+                    completedAtEpochMillis = null,
+                    spawnedFromTaskId = task.id
+                )
+                dao.upsert(next)
+                val nextSteps = subtaskDao.getForTask(task.id).mapIndexed { index, step ->
+                    step.copy(id = "$nextId-step-$index", taskId = nextId, completed = false)
+                }
+                subtaskDao.replaceForTask(nextId, nextSteps)
+                next.reminderTimeLocal?.let { reminderScheduler.schedule(next.id, next.title, next.dueDateIso!!, it) }
+            }
+        } else {
+            deleteOccurrenceChain(task.id)
+            if (task.dueDateIso != null && task.reminderTimeLocal != null) reminderScheduler.schedule(task.id, task.title, task.dueDateIso, task.reminderTimeLocal)
+        }
     }
 
     override suspend fun deleteTask(id: String) {
+        reminderScheduler.cancel(id)
+        deleteOccurrenceChain(id)
         dao.delete(id)
+    }
+
+    private suspend fun deleteOccurrenceChain(taskId: String) {
+        val next = dao.getNextOccurrence(taskId) ?: return
+        reminderScheduler.cancel(next.id)
+        deleteOccurrenceChain(next.id)
+        dao.delete(next.id)
     }
 
     override suspend fun moveTask(id: String, direction: Int) {
@@ -283,7 +337,7 @@ interface FocusSessionRepository {
     suspend fun start(durationMinutes: Int, taskId: String?)
     suspend fun pause()
     suspend fun resume()
-    suspend fun finish()
+    suspend fun finish(): Boolean
     suspend fun discard()
 }
 
@@ -307,11 +361,12 @@ class RoomFocusSessionRepository(private val dao: FocusSessionDao) : FocusSessio
         if (session.lastResumedAtEpochMillis != null) return
         dao.upsert(session.copy(lastResumedAtEpochMillis = currentTimeMillis(), outcome = "RUNNING"))
     }
-    override suspend fun finish() {
-        val session = dao.getActive() ?: return
+    override suspend fun finish(): Boolean {
+        val session = dao.getActive() ?: return false
         val now = currentTimeMillis()
         val extra = session.lastResumedAtEpochMillis?.let { (now - it).coerceAtLeast(0) } ?: 0L
         dao.upsert(session.copy(accumulatedRunningMillis = session.accumulatedRunningMillis + extra, lastResumedAtEpochMillis = null, endedAtEpochMillis = now, outcome = "COMPLETED"))
+        return true
     }
     override suspend fun discard() {
         val session = dao.getActive() ?: return

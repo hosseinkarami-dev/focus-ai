@@ -114,7 +114,7 @@ internal fun InboxScreen(notes: List<NoteEntity>, padding: PaddingValues, onOpen
                         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 FocusText(note.body.lineSequence().firstOrNull().orEmpty().ifBlank { "Untitled note" }, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                IconButton(onClick = { onArchiveNote(note, !note.archived) }, modifier = Modifier.size(36.dp)) {
+                                IconButton(onClick = { onArchiveNote(note, !note.archived) }) {
                                     Icon(
                                         imageVector = if (note.archived) Icons.Filled.Unarchive else Icons.Filled.Archive,
                                         contentDescription = localizedText(
@@ -124,7 +124,7 @@ internal fun InboxScreen(notes: List<NoteEntity>, padding: PaddingValues, onOpen
                                         tint = MaterialTheme.colorScheme.secondary
                                     )
                                 }
-                                IconButton(onClick = { noteToDelete = note }, modifier = Modifier.size(36.dp)) {
+                                IconButton(onClick = { noteToDelete = note }) {
                                     Icon(Icons.Filled.DeleteOutline, contentDescription = localizedText("Delete note", LocalAppLanguage.current), tint = MaterialTheme.colorScheme.secondary)
                                 }
                             }

@@ -43,6 +43,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -56,7 +57,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.key
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -81,6 +84,7 @@ import io.github.hosseinkarami_dev.focusai.ui.FocusText
 import io.github.hosseinkarami_dev.focusai.ui.LocalAppLanguage
 import io.github.hosseinkarami_dev.focusai.ui.localizedText
 import io.github.hosseinkarami_dev.focusai.ui.theme.FocusTheme
+import io.github.hosseinkarami_dev.focusai.publishWidgetTaskSnapshot
 import io.github.hosseinkarami_dev.focusai.ui.screens.CaptureDialog
 import io.github.hosseinkarami_dev.focusai.ui.screens.FocusScreen
 import io.github.hosseinkarami_dev.focusai.ui.screens.InboxScreen
@@ -98,7 +102,7 @@ private data class ReviewDraft(val noteId: String, val proposals: List<TaskPropo
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun App() {
+fun App(initialAction: String? = null, onInitialActionHandled: () -> Unit = {}) {
     val settingsViewModel = koinViewModel<SettingsViewModel>()
     val focusViewModel = koinViewModel<FocusViewModel>()
     val preferences by settingsViewModel.settings.collectAsState()
@@ -109,6 +113,9 @@ fun App() {
       ) {
         val viewModel = koinViewModel<TodayViewModel>()
         val tasks by viewModel.taskList.collectAsState()
+        LaunchedEffect(tasks) {
+            publishWidgetTaskSnapshot(tasks.filterNot { it.completed }.take(3).map { it.title })
+        }
         val notes by viewModel.noteList.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
@@ -116,9 +123,28 @@ fun App() {
         var showTaskEditor by rememberSaveable { mutableStateOf(false) }
         var showLanguageDialog by rememberSaveable { mutableStateOf(false) }
         var taskToEdit by remember { mutableStateOf<TaskEntity?>(null) }
+        var taskDueDatePrefill by rememberSaveable { mutableStateOf<String?>(null) }
         var showCapture by rememberSaveable { mutableStateOf(false) }
         var noteToEdit by remember { mutableStateOf<NoteEntity?>(null) }
         var review by remember { mutableStateOf<ReviewDraft?>(null) }
+        val screenStateHolder = rememberSaveableStateHolder()
+        LaunchedEffect(initialAction) {
+            when (initialAction) {
+                "io.github.hosseinkarami_dev.focusai.ADD_TASK" -> {
+                    destination = Destination.Tasks.name
+                    taskToEdit = null
+                    taskDueDatePrefill = null
+                    showTaskEditor = true
+                }
+                "io.github.hosseinkarami_dev.focusai.CAPTURE_NOTE" -> {
+                    destination = Destination.Inbox.name
+                    noteToEdit = null
+                    showCapture = true
+                }
+                "io.github.hosseinkarami_dev.focusai.OPEN_TASKS" -> destination = Destination.Tasks.name
+            }
+            if (initialAction != null) onInitialActionHandled()
+        }
         var fabVisible by remember { mutableStateOf(true) }
         val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
         val appBarScrolled = topAppBarScrollBehavior.state.contentOffset < 0f
@@ -142,6 +168,15 @@ fun App() {
                 topAppBarScrollBehavior.state.heightOffset = 0f
             }
         }
+        PlatformBackHandler(enabled = showTaskEditor || destination != Destination.Today.name) {
+            if (showTaskEditor) {
+                showTaskEditor = false
+                taskToEdit = null
+                taskDueDatePrefill = null
+            } else {
+                destination = Destination.Today.name
+            }
+        }
 
         val onToggleTask: (TaskEntity) -> Unit = { task ->
             val nextCompleted = !task.completed
@@ -150,7 +185,8 @@ fun App() {
                 val result = snackbarHostState.showSnackbar(
                     message = if (nextCompleted) "Task completed" else "Task marked open",
                     actionLabel = "Undo",
-                    withDismissAction = true
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Long
                 )
                 if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
                     viewModel.setCompleted(task, task.completed)
@@ -189,6 +225,7 @@ fun App() {
                                 showCapture = true
                             } else {
                                 taskToEdit = null
+                                taskDueDatePrefill = null
                                 showTaskEditor = true
                             }
                         },
@@ -211,26 +248,42 @@ fun App() {
                 },
                 label = "FocusAI navigation"
             ) { currentScreen ->
-            if (currentScreen == "TaskEditor") {
-                TaskEditorScreen(
-                    task = taskToEdit, padding = padding,
-                    onDismiss = { showTaskEditor = false; taskToEdit = null },
-                    onSave = { title, details, priority, estimate, dueDate, subtasks ->
-                        viewModel.saveTask(title, details, priority, estimate, dueDate, subtasks, taskToEdit)
-                        showTaskEditor = false
-                        taskToEdit = null
-                    },
-                    onDelete = { task -> viewModel.deleteTask(task); showTaskEditor = false; taskToEdit = null }
-                )
-            } else when (Destination.valueOf(currentScreen)) {
-                Destination.Today -> TodayScreen(tasks, padding, onCapture = { noteToEdit = null; showCapture = true }, onFocus = { destination = Destination.Focus.name }, onToggle = onToggleTask, onEditTask = { taskToEdit = it; showTaskEditor = true })
+              screenStateHolder.SaveableStateProvider(currentScreen) {
+                if (currentScreen == "TaskEditor") {
+                    key(taskToEdit?.id ?: "new-task") { TaskEditorScreen(
+                        task = taskToEdit, initialDueDateIso = taskDueDatePrefill, padding = padding,
+                        onDismiss = { showTaskEditor = false; taskToEdit = null; taskDueDatePrefill = null },
+                        onSave = { title, details, priority, estimate, dueDate, recurrence, reminderTime, subtasks ->
+                            val saved = viewModel.saveTask(title, details, priority, estimate, dueDate, recurrence, reminderTime, subtasks, taskToEdit)
+                            if (saved) {
+                                val successMessage = localizedText(
+                                    if (taskToEdit == null) "Task added" else "Task updated",
+                                    preferences.language
+                                )
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = successMessage,
+                                        duration = SnackbarDuration.Short
+                                    )
+                                }
+                                showTaskEditor = false
+                                taskToEdit = null
+                                taskDueDatePrefill = null
+                            }
+                            saved
+                        },
+                        onOpenNotificationSettings = viewModel::openNotificationSettings,
+                        onDelete = { task -> viewModel.deleteTask(task); showTaskEditor = false; taskToEdit = null; taskDueDatePrefill = null }
+                    ) }
+                } else when (Destination.valueOf(currentScreen)) {
+                Destination.Today -> TodayScreen(tasks, padding, onCapture = { noteToEdit = null; showCapture = true }, onFocus = { destination = Destination.Focus.name }, onToggle = onToggleTask, onEditTask = { taskDueDatePrefill = null; taskToEdit = it; showTaskEditor = true })
                 Destination.Tasks -> TaskListScreen(
                     tasks,
                     padding,
                     onToggle = onToggleTask,
-                    onEditTask = { taskToEdit = it; showTaskEditor = true },
+                    onEditTask = { taskDueDatePrefill = null; taskToEdit = it; showTaskEditor = true },
                     onMoveTask = { task, direction -> viewModel.moveTask(task, direction) },
-                    onAddTask = { taskToEdit = null; showTaskEditor = true }
+                    onAddTask = { dueDate -> taskToEdit = null; taskDueDatePrefill = dueDate; showTaskEditor = true }
                 )
                 Destination.Inbox -> InboxScreen(
                     notes = notes,
@@ -242,7 +295,8 @@ fun App() {
                             val result = snackbarHostState.showSnackbar(
                                 message = localizedText("Note deleted", preferences.language),
                                 actionLabel = localizedText("Undo", preferences.language),
-                                withDismissAction = true
+                                withDismissAction = true,
+                                duration = SnackbarDuration.Long
                             )
                             if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
                                 viewModel.restoreNote(note)
@@ -259,9 +313,26 @@ fun App() {
                     FocusScreen(
                         tasks = tasks, insightTasks = insightTasks, allSessions = allSessions,
                         padding = padding, focusLengthMinutes = preferences.focusLengthMinutes,
+                        dailyFocusGoalMinutes = preferences.dailyFocusGoalMinutes,
                         activeSession = activeSession, history = history,
                         onStart = focusViewModel::start, onPause = focusViewModel::pause,
-                        onResume = focusViewModel::resume, onFinish = focusViewModel::finish,
+                        onResume = focusViewModel::resume,
+                        onFinish = {
+                            focusViewModel.finish(
+                                preferences.breakRemindersEnabled,
+                                localizedText("FocusAI break", preferences.language),
+                                localizedText("Great work. Take a short break.", preferences.language)
+                            )
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    localizedText(
+                                        if (preferences.breakRemindersEnabled) "Great work. Take a short break." else "Focus session complete",
+                                        preferences.language
+                                    ),
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        },
                         onDiscard = focusViewModel::discard
                     )
                 }
@@ -270,9 +341,13 @@ fun App() {
                     preferences = preferences,
                     onThemeMode = settingsViewModel::setThemeMode,
                     onFocusLength = settingsViewModel::setFocusLength,
+                    onDailyFocusGoal = settingsViewModel::setDailyFocusGoal,
+                    onBreakRemindersEnabled = settingsViewModel::setBreakRemindersEnabled,
+                    onOpenNotificationSettings = viewModel::openNotificationSettings,
                     onLanguage = { showLanguageDialog = true }
                 )
-            }
+                }
+              }
             }
             AnimatedVisibility(
                 visible = showTaskEditor || appBarScrolled,

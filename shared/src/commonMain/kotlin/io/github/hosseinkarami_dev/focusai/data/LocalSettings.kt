@@ -14,7 +14,9 @@ data class AppSettingsEntity(
     @PrimaryKey val id: Int = 1,
     val themeMode: String = "System",
     val focusLengthMinutes: Int = 25,
-    @ColumnInfo(defaultValue = "'en'") val language: String = "en"
+    @ColumnInfo(defaultValue = "'en'") val language: String = "en",
+    @ColumnInfo(defaultValue = "120") val dailyFocusGoalMinutes: Int = 120,
+    @ColumnInfo(defaultValue = "0") val breakRemindersEnabled: Boolean = false
 )
 
 @Dao
@@ -33,6 +35,8 @@ interface SettingsRepository {
     fun observeSettings(): Flow<AppSettingsEntity>
     suspend fun setThemeMode(mode: String)
     suspend fun setFocusLength(minutes: Int)
+    suspend fun setDailyFocusGoal(minutes: Int)
+    suspend fun setBreakRemindersEnabled(enabled: Boolean)
     suspend fun setLanguage(language: String)
 }
 
@@ -47,6 +51,16 @@ class RoomSettingsRepository(private val dao: SettingsDao) : SettingsRepository 
     override suspend fun setFocusLength(minutes: Int) {
         val current = dao.get() ?: AppSettingsEntity()
         dao.upsert(current.copy(focusLengthMinutes = minutes.coerceIn(5, 120)))
+    }
+
+    override suspend fun setDailyFocusGoal(minutes: Int) {
+        val current = dao.get() ?: AppSettingsEntity()
+        dao.upsert(current.copy(dailyFocusGoalMinutes = minutes.coerceIn(30, 480)))
+    }
+
+    override suspend fun setBreakRemindersEnabled(enabled: Boolean) {
+        val current = dao.get() ?: AppSettingsEntity()
+        dao.upsert(current.copy(breakRemindersEnabled = enabled))
     }
 
     override suspend fun setLanguage(language: String) {

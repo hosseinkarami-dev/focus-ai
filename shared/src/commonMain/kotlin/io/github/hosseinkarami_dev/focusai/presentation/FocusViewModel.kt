@@ -6,11 +6,13 @@ import io.github.hosseinkarami_dev.focusai.data.FocusSessionEntity
 import io.github.hosseinkarami_dev.focusai.data.FocusSessionRepository
 import io.github.hosseinkarami_dev.focusai.data.TaskEntity
 import io.github.hosseinkarami_dev.focusai.data.TaskRepository
+import io.github.hosseinkarami_dev.focusai.FocusBreakReminderScheduler
+import io.github.hosseinkarami_dev.focusai.localDateIso
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class FocusViewModel(private val repository: FocusSessionRepository, tasks: TaskRepository) : ViewModel() {
+class FocusViewModel(private val repository: FocusSessionRepository, tasks: TaskRepository, private val breakReminderScheduler: FocusBreakReminderScheduler) : ViewModel() {
     val active = repository.observeActive().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     val history = repository.observeHistory().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val allSessions = repository.observeAll().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -19,7 +21,9 @@ class FocusViewModel(private val repository: FocusSessionRepository, tasks: Task
     fun start(minutes: Int, taskId: String?) = viewModelScope.launch { repository.start(minutes, taskId) }
     fun pause() = viewModelScope.launch { repository.pause() }
     fun resume() = viewModelScope.launch { repository.resume() }
-    fun finish() = viewModelScope.launch { repository.finish() }
+    fun finish(sendBreakReminder: Boolean, title: String, message: String) = viewModelScope.launch {
+        if (repository.finish() && sendBreakReminder) breakReminderScheduler.notifyBreak(title, message)
+    }
     fun discard() = viewModelScope.launch { repository.discard() }
 }
 
@@ -34,6 +38,25 @@ data class FocusInsights(
     val sessionTrend: List<Int>,
     val hasUntrackedLegacyCompletions: Boolean
 )
+
+fun todayFocusMinutes(
+    sessions: List<FocusSessionEntity>,
+    activeSession: FocusSessionEntity?,
+    nowEpochMillis: Long
+): Long {
+    val today = localDateIso(nowEpochMillis)
+    val completedTodayMillis = sessions.asSequence()
+        .filter { it.outcome == "COMPLETED" && it.endedAtEpochMillis?.let { ended -> localDateIso(ended) == today } == true }
+        .sumOf { it.accumulatedRunningMillis }
+    val pausedTodayMillis = sessions.asSequence()
+        .filter { it.outcome == "PAUSED" && localDateIso(it.startedAtEpochMillis) == today }
+        .sumOf { it.accumulatedRunningMillis }
+    val activeTodayMillis = activeSession
+        ?.takeIf { it.lastResumedAtEpochMillis != null && localDateIso(it.startedAtEpochMillis) == today }
+        ?.elapsedMillis(nowEpochMillis)
+        ?: 0L
+    return (completedTodayMillis + pausedTodayMillis + activeTodayMillis).coerceAtLeast(0L) / 60_000L
+}
 
 fun deriveFocusInsights(
     tasks: List<TaskEntity>,

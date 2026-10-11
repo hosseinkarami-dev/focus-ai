@@ -1,12 +1,12 @@
 # Testing strategy
 
-No new automated tests have been added yet. Android debug assembly and shared iOS simulator source compilation have been run successfully for the current foundation. Keep business logic deterministic with injected clock, ID generator where helpful, repositories, and provider as production flows are added.
+No new automated tests have been added yet. Android debug assembly, shared iOS arm64 compilation, and a generic iPhoneOS app-plus-widget build have passed for the current foundation. These compile checks do not replace device-level usability and accessibility verification. Keep business logic deterministic with injected clock, ID generator where helpful, repositories, and provider as production flows are added.
 
 ## Unit tests
 
-- Use cases: note save/edit, task CRUD/completion, plan membership/order, confirmation writes only selected suggestions, breakdown appends without replacing existing steps, date interpretation, and timer transitions.
+- Use cases: note save/edit, task CRUD/completion, recurring occurrence generation and Undo, month-end recurrence dates, reminder scheduling/cancellation and timezone changes, plan membership/order, confirmation writes only selected suggestions, breakdown appends without replacing existing steps, date interpretation, and timer transitions.
 - AI validation: every schema/version/enum/date/duration/length/partial/duplicate/unknown-ID case in `ai-contracts.md`.
-- Insights: period boundaries, timezone/date semantics, completed tasks, paused/abandoned sessions, average duration, and empty periods.
+- Insights and daily goals: period boundaries, local-day/timezone semantics, completed and paused sessions, active timer progress, average duration, and empty periods.
 - Error mapping: cancellation distinct from error; retries preserve note and never persist proposals.
 
 ## Repository and database tests
@@ -30,9 +30,13 @@ No new automated tests have been added yet. Android debug assembly and shared iO
 ## Compose/UI and platform tests
 
 - Semantic tests for labels, selection, task completion/undo, confirmations, editor validation, empty/error copy, and navigation return paths.
-- Android and iOS simulator/device checks for safe areas, keyboard insets, system back/sheet dismissal, tab state restoration, larger font sizes, screen reader order, and minimum touch targets.
+- Android and iOS device checks for safe areas, keyboard insets, system back/sheet dismissal, tab state restoration, notification permission/denial, task and break reminder delivery, larger font sizes, screen reader order, and minimum touch targets.
 - Timer lifecycle test: start, background, pause/resume, process recreation, app relaunch, finish, and discard. Compare against a fake clock in unit tests and real lifecycle behavior on each platform.
 - Visual review Today, Inbox, AI Review, Task Details, Focus across light/dark and compact/wide viewport. No screenshot workflow currently exists in the repository.
+- Verify Android and iOS home-screen widgets refresh from current open tasks, render empty/long-title states, and route their task, task-creation, and capture actions into the matching app screens. Check the iOS App Group entitlement on both targets in a signed device build.
+- Review at 200% text size and with screen readers: Today, Inbox, Tasks List/Week, task editor, Focus, Settings, dialogs, and transient feedback. Confirm all content remains reachable by scrolling, controls retain a 48 dp minimum target, dynamic labels describe actions and state, and no fixed-size chart, timer, or date cell clips text.
+
+The current checkout was verified with Android debug assembly and shared iOS arm64 compilation. Device-level checks are still pending; Android Debug Bridge is not available in the local environment, and iOS simulator verification is intentionally not part of this workflow.
 
 ## Integration and release gates
 

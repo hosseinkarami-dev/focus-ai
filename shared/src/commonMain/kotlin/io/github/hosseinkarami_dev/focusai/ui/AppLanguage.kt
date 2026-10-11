@@ -129,6 +129,24 @@ private val stepCountPattern = Regex("\\d+ steps")
 
 fun localizedText(text: String, language: String): String {
     if (language == "en") return text
+    focusCopyByLanguage[language]?.get(text)?.let { return it }
+    if (text == "Notification access is off. Allow notifications to receive reminders.") {
+        return when (language) {
+            "fa" -> "اعلان‌ها خاموش هستند. برای دریافت یادآوری، اجازهٔ اعلان‌ها را فعال کنید."
+            "es" -> "Las notificaciones están desactivadas. Permítelas para recibir recordatorios."
+            "fr" -> "Les notifications sont désactivées. Autorisez-les pour recevoir des rappels."
+            "ar" -> "الإشعارات متوقفة. اسمح بالإشعارات لتلقي التذكيرات."
+            else -> text
+        }
+    }
+    val recurringCopy = when (language) {
+        "fa" -> mapOf("Repeat" to "تکرار", "Never" to "هرگز", "Daily" to "روزانه", "Weekly" to "هفتگی", "Monthly" to "ماهانه", "Choose a due date to repeat this task." to "برای تکرار این کار، تاریخ سررسید را انتخاب کنید.", "Reminder" to "یادآوری", "Choose reminder time" to "انتخاب زمان یادآوری", "Clear reminder" to "پاک کردن یادآوری", "Choose a due date before setting a reminder." to "پیش از تنظیم یادآوری، تاریخ سررسید را انتخاب کنید.", "Notification settings" to "تنظیمات اعلان", "Couldn’t schedule the reminder. Check notification access and choose a future time." to "یادآوری تنظیم نشد. دسترسی اعلان را بررسی و زمان آینده‌ای انتخاب کنید.", "Reminder time" to "زمان یادآوری", "Select time" to "انتخاب زمان", "Task added" to "کار اضافه شد", "Task updated" to "کار به‌روزرسانی شد", "List" to "فهرست", "Week" to "هفته", "Previous week" to "هفته قبل", "Next week" to "هفته بعد", "This week" to "این هفته", "No tasks for this day" to "کاری برای این روز نیست", "Unscheduled" to "بدون زمان‌بندی")
+        "es" -> mapOf("Repeat" to "Repetir", "Never" to "Nunca", "Daily" to "Diariamente", "Weekly" to "Semanalmente", "Monthly" to "Mensualmente", "Choose a due date to repeat this task." to "Elige una fecha límite para repetir esta tarea.", "Reminder" to "Recordatorio", "Choose reminder time" to "Elegir hora del recordatorio", "Clear reminder" to "Borrar recordatorio", "Choose a due date before setting a reminder." to "Elige una fecha límite antes de configurar un recordatorio.", "Notification settings" to "Ajustes de notificaciones", "Couldn’t schedule the reminder. Check notification access and choose a future time." to "No se pudo programar el recordatorio. Revisa los permisos y elige una hora futura.", "Reminder time" to "Hora del recordatorio", "Select time" to "Seleccionar hora", "Task added" to "Tarea añadida", "Task updated" to "Tarea actualizada", "List" to "Lista", "Week" to "Semana", "Previous week" to "Semana anterior", "Next week" to "Semana siguiente", "This week" to "Esta semana", "No tasks for this day" to "No hay tareas para este día", "Unscheduled" to "Sin fecha")
+        "fr" -> mapOf("Repeat" to "Répéter", "Never" to "Jamais", "Daily" to "Chaque jour", "Weekly" to "Chaque semaine", "Monthly" to "Chaque mois", "Choose a due date to repeat this task." to "Choisissez une échéance pour répéter cette tâche.", "Reminder" to "Rappel", "Choose reminder time" to "Choisir l’heure du rappel", "Clear reminder" to "Effacer le rappel", "Choose a due date before setting a reminder." to "Choisissez une échéance avant de définir un rappel.", "Notification settings" to "Réglages des notifications", "Couldn’t schedule the reminder. Check notification access and choose a future time." to "Impossible de programmer le rappel. Vérifiez les notifications et choisissez une heure future.", "Reminder time" to "Heure du rappel", "Select time" to "Choisir l’heure", "Task added" to "Tâche ajoutée", "Task updated" to "Tâche mise à jour", "List" to "Liste", "Week" to "Semaine", "Previous week" to "Semaine précédente", "Next week" to "Semaine suivante", "This week" to "Cette semaine", "No tasks for this day" to "Aucune tâche pour ce jour", "Unscheduled" to "Sans date")
+        "ar" -> mapOf("Repeat" to "التكرار", "Never" to "أبداً", "Daily" to "يومياً", "Weekly" to "أسبوعياً", "Monthly" to "شهرياً", "Choose a due date to repeat this task." to "اختر موعداً لتكرار هذه المهمة.", "Reminder" to "تذكير", "Choose reminder time" to "اختر وقت التذكير", "Clear reminder" to "مسح التذكير", "Choose a due date before setting a reminder." to "اختر موعداً قبل ضبط التذكير.", "Notification settings" to "إعدادات الإشعارات", "Couldn’t schedule the reminder. Check notification access and choose a future time." to "تعذر جدولة التذكير. تحقق من الإشعارات واختر وقتاً مستقبلياً.", "Reminder time" to "وقت التذكير", "Select time" to "اختيار الوقت", "Task added" to "تمت إضافة المهمة", "Task updated" to "تم تحديث المهمة", "List" to "القائمة", "Week" to "الأسبوع", "Previous week" to "الأسبوع السابق", "Next week" to "الأسبوع التالي", "This week" to "هذا الأسبوع", "No tasks for this day" to "لا توجد مهام لهذا اليوم", "Unscheduled" to "بلا موعد")
+        else -> emptyMap()
+    }
+    recurringCopy[text]?.let { return it }
     val dictionary = when (language) { "fa" -> persian; "es" -> spanish; "fr" -> french; "ar" -> arabic; else -> persian }
     dictionary[text]?.let { return it }
     val extra = when (language) { "fa" -> persianExtra; "es" -> spanishExtra; else -> emptyMap() }
@@ -191,3 +209,42 @@ fun localizedText(text: String, language: String): String {
         else -> text
     }
 }
+
+private val focusCopyByLanguage = mapOf(
+    "fa" to mapOf(
+        "Today's focus goal" to "هدف تمرکز امروز", "Build a steady rhythm, one session at a time." to "با هر جلسه، ریتمی پایدار بسازید.", "of" to "از",
+        "Daily focus goal" to "هدف روزانهٔ تمرکز", "Set a gentle target for your focused time." to "برای زمان تمرکزتان هدفی متعادل تعیین کنید.", "Your progress appears on the Focus screen." to "پیشرفت شما در صفحهٔ تمرکز نمایش داده می‌شود.",
+        "Break reminders" to "یادآوری استراحت", "Get a gentle nudge after completing a focus session." to "پس از پایان جلسهٔ تمرکز، یادآوری ملایمی دریافت کنید.",
+        "Remind me to take a break" to "برای استراحت یادآوری کن", "A short pause helps you reset." to "وقفه‌ای کوتاه به بازیابی تمرکز کمک می‌کند.",
+        "Notification access is off. Enable it to receive break reminders." to "اعلان‌ها خاموش هستند. برای دریافت یادآوری استراحت، آن‌ها را فعال کنید.",
+        "FocusAI break" to "استراحت FocusAI", "Great work. Take a short break." to "عالی بود. کمی استراحت کنید.", "Focus session complete" to "جلسهٔ تمرکز تمام شد",
+        "Sort" to "مرتب‌سازی", "Sort tasks" to "مرتب‌سازی کارها", "My order" to "ترتیب من", "Due date" to "مهلت", "Priority" to "اولویت", "Title" to "عنوان"
+    ),
+    "es" to mapOf(
+        "Today's focus goal" to "Meta de enfoque de hoy", "Build a steady rhythm, one session at a time." to "Crea un ritmo constante, sesión a sesión.", "of" to "de",
+        "Daily focus goal" to "Meta diaria de enfoque", "Set a gentle target for your focused time." to "Elige un objetivo realista para tu tiempo de enfoque.", "Your progress appears on the Focus screen." to "Tu progreso aparece en la pantalla Enfoque.",
+        "Break reminders" to "Recordatorios de descanso", "Get a gentle nudge after completing a focus session." to "Recibe un aviso amable al terminar una sesión.",
+        "Remind me to take a break" to "Recordarme descansar", "A short pause helps you reset." to "Una pausa breve te ayuda a recargar.",
+        "Notification access is off. Enable it to receive break reminders." to "Las notificaciones están desactivadas. Actívalas para recibir recordatorios de descanso.",
+        "FocusAI break" to "Descanso de FocusAI", "Great work. Take a short break." to "¡Buen trabajo! Tómate un breve descanso.", "Focus session complete" to "Sesión de enfoque completada",
+        "Sort" to "Ordenar", "Sort tasks" to "Ordenar tareas", "My order" to "Mi orden", "Due date" to "Fecha límite", "Priority" to "Prioridad", "Title" to "Título"
+    ),
+    "fr" to mapOf(
+        "Today's focus goal" to "Objectif de concentration du jour", "Build a steady rhythm, one session at a time." to "Trouvez votre rythme, une session à la fois.", "of" to "sur",
+        "Daily focus goal" to "Objectif quotidien", "Set a gentle target for your focused time." to "Choisissez un objectif adapté à votre temps de concentration.", "Your progress appears on the Focus screen." to "Votre progression apparaît sur l’écran Concentration.",
+        "Break reminders" to "Rappels de pause", "Get a gentle nudge after completing a focus session." to "Recevez un rappel à la fin d’une session.",
+        "Remind me to take a break" to "Me rappeler de faire une pause", "A short pause helps you reset." to "Une courte pause aide à reprendre son souffle.",
+        "Notification access is off. Enable it to receive break reminders." to "Les notifications sont désactivées. Activez-les pour recevoir les rappels de pause.",
+        "FocusAI break" to "Pause FocusAI", "Great work. Take a short break." to "Bravo. Faites une courte pause.", "Focus session complete" to "Session de concentration terminée",
+        "Sort" to "Trier", "Sort tasks" to "Trier les tâches", "My order" to "Mon ordre", "Due date" to "Échéance", "Priority" to "Priorité", "Title" to "Titre"
+    ),
+    "ar" to mapOf(
+        "Today's focus goal" to "هدف التركيز اليوم", "Build a steady rhythm, one session at a time." to "أنشئ إيقاعاً ثابتاً، جلسة بعد جلسة.", "of" to "من",
+        "Daily focus goal" to "هدف التركيز اليومي", "Set a gentle target for your focused time." to "حدد هدفاً مناسباً لوقت تركيزك.", "Your progress appears on the Focus screen." to "يظهر تقدمك في شاشة التركيز.",
+        "Break reminders" to "تذكيرات الاستراحة", "Get a gentle nudge after completing a focus session." to "احصل على تذكير لطيف بعد إكمال جلسة تركيز.",
+        "Remind me to take a break" to "ذكّرني بأخذ استراحة", "A short pause helps you reset." to "استراحة قصيرة تساعدك على استعادة نشاطك.",
+        "Notification access is off. Enable it to receive break reminders." to "الإشعارات متوقفة. فعّلها لتلقي تذكيرات الاستراحة.",
+        "FocusAI break" to "استراحة FocusAI", "Great work. Take a short break." to "عمل رائع. خذ استراحة قصيرة.", "Focus session complete" to "اكتملت جلسة التركيز",
+        "Sort" to "ترتيب", "Sort tasks" to "ترتيب المهام", "My order" to "ترتيبي", "Due date" to "تاريخ الاستحقاق", "Priority" to "الأولوية", "Title" to "العنوان"
+    )
+)

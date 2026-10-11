@@ -10,6 +10,7 @@ import io.github.hosseinkarami_dev.focusai.data.NoteEntity
 import io.github.hosseinkarami_dev.focusai.data.NoteRepository
 import io.github.hosseinkarami_dev.focusai.data.TaskProposal
 import io.github.hosseinkarami_dev.focusai.data.TaskRepository
+import io.github.hosseinkarami_dev.focusai.TaskReminderScheduler
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -25,7 +26,8 @@ data class TodayUiState(
 class TodayViewModel(
     private val tasks: TaskRepository,
     private val notes: NoteRepository,
-    private val aiProvider: AiProvider
+    private val aiProvider: AiProvider,
+    private val reminderScheduler: TaskReminderScheduler
 ) : ViewModel() {
     val taskList: StateFlow<List<TaskEntity>> = tasks.observeTasks()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -33,9 +35,12 @@ class TodayViewModel(
     val noteList: StateFlow<List<NoteEntity>> = notes.observeNotes()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    suspend fun saveTask(title: String, details: String, priority: String, estimateMinutes: Int, dueDateIso: String?, subtasks: List<TaskStepDraft>, existing: TaskEntity? = null) {
-        if (title.isNotBlank()) tasks.saveTask(title, details, priority, estimateMinutes, dueDateIso, subtasks, existing)
+    suspend fun saveTask(title: String, details: String, priority: String, estimateMinutes: Int, dueDateIso: String?, recurrenceRule: String?, reminderTimeLocal: String?, subtasks: List<TaskStepDraft>, existing: TaskEntity? = null): Boolean {
+        if (title.isBlank()) return false
+        return tasks.saveTask(title, details, priority, estimateMinutes, dueDateIso, recurrenceRule, reminderTimeLocal, subtasks, existing)
     }
+
+    fun openNotificationSettings() = reminderScheduler.openNotificationSettings()
 
     suspend fun loadSubtasks(taskId: String): List<SubtaskEntity> = tasks.getSubtasks(taskId)
 

@@ -33,6 +33,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text as MaterialText
 import androidx.compose.material3.TextButton
@@ -57,13 +58,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import io.github.hosseinkarami_dev.focusai.currentTimeMillis
 import io.github.hosseinkarami_dev.focusai.data.TaskEntity
 import io.github.hosseinkarami_dev.focusai.presentation.elapsedMillis
+import io.github.hosseinkarami_dev.focusai.presentation.todayFocusMinutes
 import io.github.hosseinkarami_dev.focusai.ui.LocalAppLanguage
 import io.github.hosseinkarami_dev.focusai.ui.localizedText
 
 @Composable
 internal fun FocusScreen(
     tasks: List<TaskEntity>, insightTasks: List<TaskEntity>, allSessions: List<io.github.hosseinkarami_dev.focusai.data.FocusSessionEntity>,
-    padding: PaddingValues, focusLengthMinutes: Int,
+    padding: PaddingValues, focusLengthMinutes: Int, dailyFocusGoalMinutes: Int,
     activeSession: io.github.hosseinkarami_dev.focusai.data.FocusSessionEntity?,
     history: List<io.github.hosseinkarami_dev.focusai.data.FocusSessionEntity>,
     onStart: (Int, String?) -> Unit, onPause: () -> Unit, onResume: () -> Unit,
@@ -85,6 +87,10 @@ internal fun FocusScreen(
     val progress = if (planned > 0) (elapsed.toFloat() / planned).coerceIn(0f, 1f) else 0f
     val insights = remember(insightTasks, allSessions, now, insightPeriodDays) {
         io.github.hosseinkarami_dev.focusai.presentation.deriveFocusInsights(insightTasks, allSessions, now, insightPeriodDays)
+    }
+    val todayMinutes = todayFocusMinutes(allSessions, activeSession, now)
+    LaunchedEffect(activeSession?.id, activeSession?.lastResumedAtEpochMillis, remaining <= 0L) {
+        if (activeSession != null && activeSession.lastResumedAtEpochMillis != null && remaining <= 0L) onFinish()
     }
     Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(Modifier.height(24.dp))
@@ -123,6 +129,33 @@ internal fun FocusScreen(
                 }
                 TextButton(onClick = onFinish) { FocusText("Finish") }
                 TextButton(onClick = { confirmDiscard = true }) { FocusText("Discard", color = MaterialTheme.colorScheme.error) }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        FocusText("Today's focus goal", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        FocusText("Build a steady rhythm, one session at a time.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+                    }
+                    FocusText("${(todayMinutes * 100 / dailyFocusGoalMinutes.coerceAtLeast(1)).coerceAtMost(100)}%", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                }
+                LinearProgressIndicator(
+                    progress = { (todayMinutes.toFloat() / dailyFocusGoalMinutes.coerceAtLeast(1)).coerceIn(0f, 1f) },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surface
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
+                    FocusText("$todayMinutes min", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                    FocusText("of", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                    FocusText("$dailyFocusGoalMinutes min", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                }
             }
         }
         Spacer(Modifier.height(30.dp))

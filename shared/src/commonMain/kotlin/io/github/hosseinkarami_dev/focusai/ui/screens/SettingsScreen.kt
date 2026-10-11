@@ -3,6 +3,7 @@ package io.github.hosseinkarami_dev.focusai.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,15 +31,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text as MaterialText
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.hosseinkarami_dev.focusai.data.AppSettingsEntity
+import io.github.hosseinkarami_dev.focusai.rememberNotificationPermissionRequester
 import io.github.hosseinkarami_dev.focusai.ui.FocusAiMark
 import io.github.hosseinkarami_dev.focusai.ui.FocusText
 import io.github.hosseinkarami_dev.focusai.ui.LocalAppLanguage
@@ -51,8 +58,13 @@ internal fun SettingsScreen(
     preferences: AppSettingsEntity,
     onThemeMode: (String) -> Unit,
     onFocusLength: (Int) -> Unit,
+    onDailyFocusGoal: (Int) -> Unit,
+    onBreakRemindersEnabled: (Boolean) -> Unit,
+    onOpenNotificationSettings: () -> Unit,
     onLanguage: () -> Unit
 ) {
+    val requestNotificationPermission = rememberNotificationPermissionRequester()
+    var notificationPermissionDenied by remember { mutableStateOf(false) }
     Column(
         Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 22.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -121,6 +133,42 @@ internal fun SettingsScreen(
                 }
             }
             FocusText("New focus sessions will use this duration.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+        }
+        SectionCard(title = "Daily focus goal", subtitle = "Set a gentle target for your focused time.") {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(60, 90, 120, 180, 240).forEach { minutes ->
+                    FilterChip(
+                        selected = preferences.dailyFocusGoalMinutes == minutes,
+                        onClick = { onDailyFocusGoal(minutes) },
+                        label = { FocusText("$minutes min") }
+                    )
+                }
+            }
+            FocusText("Your progress appears on the Focus screen.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+        }
+        SectionCard(title = "Break reminders", subtitle = "Get a gentle nudge after completing a focus session.") {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.weight(1f)) {
+                    FocusText("Remind me to take a break", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    FocusText("A short pause helps you reset.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+                }
+                Switch(
+                    checked = preferences.breakRemindersEnabled,
+                    onCheckedChange = { enabled ->
+                        notificationPermissionDenied = false
+                        if (!enabled) onBreakRemindersEnabled(false)
+                        else requestNotificationPermission { granted ->
+                            if (granted) onBreakRemindersEnabled(true) else notificationPermissionDenied = true
+                        }
+                    }
+                )
+            }
+            if (notificationPermissionDenied) {
+                FocusText(localizedText("Notification access is off. Enable it to receive break reminders.", LocalAppLanguage.current), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = onOpenNotificationSettings) {
+                    FocusText(localizedText("Notification settings", LocalAppLanguage.current))
+                }
+            }
         }
         Card(shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

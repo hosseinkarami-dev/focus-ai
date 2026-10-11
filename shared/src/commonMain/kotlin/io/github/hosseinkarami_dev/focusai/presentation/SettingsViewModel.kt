@@ -17,5 +17,9 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     fun setFocusLength(minutes: Int) = viewModelScope.launch { repository.setFocusLength(minutes) }
 
+    fun setDailyFocusGoal(minutes: Int) = viewModelScope.launch { repository.setDailyFocusGoal(minutes) }
+
+    fun setBreakRemindersEnabled(enabled: Boolean) = viewModelScope.launch { repository.setBreakRemindersEnabled(enabled) }
+
     fun setLanguage(language: String) = viewModelScope.launch { repository.setLanguage(language) }
 }

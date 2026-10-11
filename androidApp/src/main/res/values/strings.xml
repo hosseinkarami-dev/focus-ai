@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">FocusAI</string>
+    <string name="widget_title">Your focus</string>
+    <string name="widget_loading">Loading your tasks…</string>
+    <string name="widget_empty">You’re all clear. Add a task to get started.</string>
+    <string name="widget_capture">Capture</string>
+    <string name="widget_add_task">+ Task</string>
+    <string name="shortcut_add_task_short">Add task</string>
+    <string name="shortcut_add_task_long">Create a task in FocusAI</string>
+    <string name="shortcut_capture_short">Capture thought</string>
+    <string name="shortcut_capture_long">Capture a thought in FocusAI</string>
 </resources>

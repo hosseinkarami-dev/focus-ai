@@ -42,6 +42,42 @@ fun epochMillisToIsoDate(epochMillis: Long?): String? {
     return "${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
 }
 
+/** Returns the next Gregorian occurrence, clamping monthly dates to the final day of short months. */
+fun nextDueDate(isoDate: String, recurrenceRule: String?): String? {
+    val epoch = isoDateToEpochMillis(isoDate) ?: return null
+    return when (recurrenceRule) {
+        "DAILY" -> epochMillisToIsoDate(epoch + MILLIS_PER_DAY)
+        "WEEKLY" -> epochMillisToIsoDate(epoch + 7 * MILLIS_PER_DAY)
+        "MONTHLY" -> {
+            val year = isoDate.substring(0, 4).toInt()
+            val month = isoDate.substring(5, 7).toInt()
+            val day = isoDate.substring(8, 10).toInt()
+            val nextYear = if (month == 12) year + 1 else year
+            val nextMonth = if (month == 12) 1 else month + 1
+            val leap = nextYear % 4 == 0 && (nextYear % 100 != 0 || nextYear % 400 == 0)
+            val lastDay = when (nextMonth) {
+                2 -> if (leap) 29 else 28
+                4, 6, 9, 11 -> 30
+                else -> 31
+            }
+            "${nextYear.toString().padStart(4, '0')}-${nextMonth.toString().padStart(2, '0')}-${minOf(day, lastDay).toString().padStart(2, '0')}"
+        }
+        else -> null
+    }
+}
+
+/** Returns Monday through Sunday for the week containing the given ISO date. */
+fun weekDatesFor(isoDate: String): List<String> {
+    val epoch = isoDateToEpochMillis(isoDate) ?: return emptyList()
+    val dayNumber = floorDiv(epoch, MILLIS_PER_DAY)
+    val weekdayFromMonday = ((dayNumber + 3) % 7 + 7) % 7 // 1970-01-01 was Thursday.
+    val mondayNoon = (dayNumber - weekdayFromMonday) * MILLIS_PER_DAY + MILLIS_PER_DAY / 2
+    return (0..6).map { offset -> epochMillisToIsoDate(mondayNoon + offset * MILLIS_PER_DAY).orEmpty() }
+}
+
+fun shiftIsoDate(isoDate: String, days: Int): String? =
+    isoDateToEpochMillis(isoDate)?.let { epochMillisToIsoDate(it + days * MILLIS_PER_DAY) }
+
 private fun floorDiv(value: Long, divisor: Long): Long {
     val quotient = value / divisor
     return if ((value xor divisor) < 0 && quotient * divisor != value) quotient - 1 else quotient
