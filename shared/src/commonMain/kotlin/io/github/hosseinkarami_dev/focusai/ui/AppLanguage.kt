@@ -152,6 +152,10 @@ fun localizedText(text: String, language: String): String {
     val extra = when (language) { "fa" -> persianExtra; "es" -> spanishExtra; else -> emptyMap() }
     extra[text]?.let { return it }
     return when {
+        language == "fa" && text == "Manage your appearance, language, and focus preferences." -> "ظاهر، زبان و تنظیمات تمرکز برنامه را مدیریت کنید."
+        language == "es" && text == "Manage your appearance, language, and focus preferences." -> "Configura la apariencia, el idioma y tus preferencias de enfoque."
+        language == "fr" && text == "Manage your appearance, language, and focus preferences." -> "Gérez l’apparence, la langue et vos préférences de concentration."
+        language == "ar" && text == "Manage your appearance, language, and focus preferences." -> "أدِر المظهر واللغة وتفضيلات التركيز في التطبيق."
         language == "fa" && text == "No tasks planned yet" -> "هنوز کاری برنامه‌ریزی نشده"
         language == "es" && text == "No tasks planned yet" -> "Aún no hay tareas planificadas"
         language == "fa" && text.endsWith(" min planned") -> "${text.removeSuffix(" min planned")} دقیقه برنامه‌ریزی‌شده"

@@ -98,9 +98,9 @@ internal fun TodayScreen(tasks: List<TaskEntity>, padding: PaddingValues, onCapt
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column {
-                    FocusText("YOUR SPACE TO FOCUS", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.SemiBold, letterSpacing = 1.1.sp)
-                    Spacer(Modifier.height(5.dp))
                     FocusText("Make today count.", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(5.dp))
+                    FocusText("YOUR SPACE TO FOCUS", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.SemiBold, letterSpacing = 1.1.sp)
                 }
                 FocusAiMark(size = 48.dp)
             }

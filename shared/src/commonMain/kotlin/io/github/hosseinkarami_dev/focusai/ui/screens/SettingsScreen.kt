@@ -70,12 +70,9 @@ internal fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Spacer(Modifier.height(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            FocusAiMark(size = 54.dp)
-            Column {
-                FocusText("Make it yours", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                FocusText("A calmer setup, tuned to you.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
-            }
+        Column {
+            FocusText("Settings", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            FocusText("Manage your appearance, language, and focus preferences.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
         }
         SectionCard(title = "Appearance", subtitle = "Choose the look that feels right.") {
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
