@@ -20,6 +20,16 @@ FocusAI is a privacy-minded productivity app for Android and iOS. Capture a thou
 - **Make it yours:** choose Light, Dark, or System appearance and use the app in English, Persian, Spanish, French, or Arabic. Persian and Arabic use right-to-left layout.
 - **Stay in control:** task suggestions remain a preview until you choose what to keep. Local task and note workflows do not require an account or network connection.
 
+## Screenshots
+
+| Today | Tasks | Inbox |
+| --- | --- | --- |
+| <img src="screenshots/1.png" alt="FocusAI Today screen" width="260"> | <img src="screenshots/2.png" alt="FocusAI Tasks screen" width="260"> | <img src="screenshots/3.png" alt="FocusAI Inbox screen" width="260"> |
+
+| Focus | Settings |
+| --- | --- |
+| <img src="screenshots/4.png" alt="FocusAI Focus screen" width="260"> | <img src="screenshots/5.png" alt="FocusAI Settings screen" width="260"> |
+
 ## Screens and entry points
 
 | Today | Inbox | Tasks | Focus | Settings |
