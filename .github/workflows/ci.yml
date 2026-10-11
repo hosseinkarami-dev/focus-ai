@@ -25,7 +25,9 @@ jobs:
           java-version: '17'
       - uses: android-actions/setup-android@v4
       - name: Install the configured Android SDK platform
-        run: sdkmanager --channel=3 --install "platforms;android-37" "build-tools;37.0.0"
+        run: |
+          sdkmanager --list --channel=3 | grep -E 'platforms;android-37|build-tools;37.0.0' || true
+          sdkmanager --install "platforms;android-37" "build-tools;37.0.0" --channel=3
       - uses: gradle/actions/setup-gradle@v6
       - name: Run shared tests and build Android app
         run: ./gradlew :shared:testAndroidHostTest :androidApp:assembleDebug
