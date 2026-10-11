@@ -94,8 +94,8 @@ internal fun FocusScreen(
     }
     Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(Modifier.height(24.dp))
-        FocusText("Focus", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        FocusText("A little room to do your best work.", color = MaterialTheme.colorScheme.secondary)
+        FocusText("Focus", modifier = Modifier.align(Alignment.Start), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        FocusText("A little room to do your best work.", modifier = Modifier.align(Alignment.Start), color = MaterialTheme.colorScheme.secondary)
         Spacer(Modifier.height(26.dp))
         if (activeSession == null && tasks.isNotEmpty()) {
             FocusText("FOCUS ON A TASK", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.sp)
