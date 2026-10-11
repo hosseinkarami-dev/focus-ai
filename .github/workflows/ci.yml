@@ -18,15 +18,15 @@ jobs:
     name: Android and shared checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
       - name: Install the configured Android SDK platform
         run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Run shared tests and build Android app
         run: ./gradlew :shared:testAndroidHostTest :androidApp:assembleDebug
       - name: Compile Room migration instrumentation tests
@@ -44,12 +44,12 @@ jobs:
     name: iOS device build (unsigned)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Compile shared iOS arm64 framework
         run: ./gradlew :shared:compileKotlinIosArm64
       - name: Build iOS app for generic device
