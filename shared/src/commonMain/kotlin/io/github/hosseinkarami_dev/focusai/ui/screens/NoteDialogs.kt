@@ -62,7 +62,7 @@ internal fun CaptureDialog(
                 FocusText("Write it as it comes. Your note is saved here before any suggestions are reviewed.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
                 OutlinedTextField(value = note, onValueChange = { note = it; message = null }, modifier = Modifier.fillMaxWidth(), minLines = 4, maxLines = 7, placeholder = { FocusText("I need to…") })
                 FocusText(
-                    if (sendsNotesToBackend) "Your note is sent securely to FocusAI only when you request suggestions. Review each suggestion before saving."
+                    if (sendsNotesToBackend) "When you request suggestions, your note is sent to the configured FocusAI service and OpenAI. Review each suggestion before saving."
                     else "Sample AI preview · no service is contacted",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary

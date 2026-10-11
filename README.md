@@ -8,7 +8,7 @@
 
 FocusAI is a privacy-minded productivity app for Android and iOS. Capture a thought in your Inbox, shape it into a task when you are ready, and make room for focused work with a built-in timer. Tasks, notes, preferences, and focus history are stored locally on your device.
 
-> **AI status:** sample suggestions are the default. A separately deployable OpenAI-backed Ktor service is included; the app contacts it only when a backend URL is configured and the user requests suggestions. The OpenAI key stays on the server.
+> **AI status:** sample suggestions are the default. A separately deployable OpenAI-backed Ktor service is included; the app contacts it only when a backend URL is configured and the user requests suggestions. In remote mode, note text is sent to the configured FocusAI service and OpenAI. The OpenAI key stays on the server. The service is not deployed and needs authorization, gateway abuse controls, and a published privacy/retention policy before public use.
 
 ## What you can do
 

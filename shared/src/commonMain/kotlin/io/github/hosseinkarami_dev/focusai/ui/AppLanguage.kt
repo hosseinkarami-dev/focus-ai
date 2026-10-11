@@ -152,6 +152,10 @@ fun localizedText(text: String, language: String): String {
     val extra = when (language) { "fa" -> persianExtra; "es" -> spanishExtra; else -> emptyMap() }
     extra[text]?.let { return it }
     return when {
+        language == "fa" && text == "When you request suggestions, your note is sent to the configured FocusAI service and OpenAI. Review each suggestion before saving." -> "با درخواست پیشنهاد، یادداشت شما برای سرویس FocusAI پیکربندی‌شده و OpenAI ارسال می‌شود. پیش از ذخیره، پیشنهادها را بررسی کنید."
+        language == "es" && text == "When you request suggestions, your note is sent to the configured FocusAI service and OpenAI. Review each suggestion before saving." -> "Al pedir sugerencias, tu nota se envía al servicio FocusAI configurado y a OpenAI. Revisa cada sugerencia antes de guardarla."
+        language == "fr" && text == "When you request suggestions, your note is sent to the configured FocusAI service and OpenAI. Review each suggestion before saving." -> "Lorsque vous demandez des suggestions, votre note est envoyée au service FocusAI configuré et à OpenAI. Vérifiez chaque suggestion avant de l’enregistrer."
+        language == "ar" && text == "When you request suggestions, your note is sent to the configured FocusAI service and OpenAI. Review each suggestion before saving." -> "عند طلب الاقتراحات، تُرسل ملاحظتك إلى خدمة FocusAI المُعدّة وOpenAI. راجع كل اقتراح قبل حفظه."
         language == "fa" && text == "Manage your appearance, language, and focus preferences." -> "ظاهر، زبان و تنظیمات تمرکز برنامه را مدیریت کنید."
         language == "es" && text == "Manage your appearance, language, and focus preferences." -> "Configura la apariencia, el idioma y tus preferencias de enfoque."
         language == "fr" && text == "Manage your appearance, language, and focus preferences." -> "Gérez l’apparence, la langue et vos préférences de concentration."

@@ -53,7 +53,7 @@ Product quality is evaluated with observable outcomes rather than a fabricated s
 ## Assumptions and open questions
 
 - Initial release is single-device and account-free; the user can clear local data.
-- A secure backend is a future deployment dependency; no backend repository or API currently exists.
+- An optional OpenAI-backed Ktor service exists, but it is not deployed; decide service authorization, abuse controls, retention terms, and privacy policy before enabling it for users.
 - Product copy and default locale are English for the design phase; date formatting and timezone are localized by platform APIs.
 - Decide before implementation whether task deadlines support date-only values only (recommended initially) or exact instants. Do not convert a date-only deadline into a time.
 - Define data export/retention expectations before a public release.
