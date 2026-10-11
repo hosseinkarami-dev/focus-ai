@@ -80,7 +80,7 @@ internal fun CaptureDialog(
                             onSaved()
                         } catch (cancelled: CancellationException) {
                             throw cancelled
-                        } catch (_: Throwable) {
+                        } catch (_: Exception) {
                             message = "Couldn’t save this note. Please try again."
                         } finally {
                             loading = false
@@ -97,7 +97,7 @@ internal fun CaptureDialog(
                             else onReview(saved.id, ideas)
                         } catch (cancelled: CancellationException) {
                             throw cancelled
-                        } catch (_: Throwable) {
+                        } catch (_: Exception) {
                             message = "Couldn’t create suggestions. Your note is saved; try again."
                         } finally {
                             loading = false

@@ -234,7 +234,7 @@ internal fun TaskEditorScreen(
                             if (!success && reminderTime.isBlank()) saveError = "Couldn’t save this task. Please try again."
                         } catch (cancelled: CancellationException) {
                             throw cancelled
-                        } catch (_: Throwable) {
+                        } catch (_: Exception) {
                             saving = false
                             saveError = "Couldn’t save this task. Please try again."
                         }

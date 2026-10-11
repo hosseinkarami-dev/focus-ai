@@ -257,7 +257,7 @@ class RoomTaskRepository(private val dao: TaskDao, private val subtaskDao: Subta
                     step.copy(id = "$nextId-step-$index", taskId = nextId, completed = false)
                 }
                 subtaskDao.replaceForTask(nextId, nextSteps)
-                next.reminderTimeLocal?.let { reminderScheduler.schedule(next.id, next.title, next.dueDateIso!!, it) }
+                next.reminderTimeLocal?.let { reminderScheduler.schedule(next.id, next.title, nextDate, it) }
             }
         } else {
             deleteOccurrenceChain(task.id)
