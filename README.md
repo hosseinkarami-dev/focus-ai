@@ -56,7 +56,7 @@ Open [`iosApp/iosApp.xcodeproj`](iosApp/iosApp.xcodeproj) in Xcode and build the
 
 The default build uses sample suggestions and makes no AI network request. To use real suggestions, deploy the service in `aiBackend/` behind HTTPS, then configure the app with the full endpoint URL, for example `-PfocusAiBackendUrl=https://your-api.example/v1/ai/extract-tasks` for Android or set `FOCUSAI_BACKEND_URL` to that full endpoint in `iosApp/Configuration/Config.xcconfig`. Set `OPENAI_API_KEY`, `OPENAI_MODEL`, and optionally `PORT` in the backend environment. Never put the OpenAI key in the app.
 
-Run the service locally with `OPENAI_API_KEY=... OPENAI_MODEL=... ./gradlew -p aiBackend run`. It exposes `GET /health` and `POST /v1/ai/extract-tasks`. The included in-memory per-IP limit is intended for a single small deployment; production deployments should also apply gateway rate limits and abuse controls. Review OpenAI data handling and configure retention to match your product policy before enabling a production endpoint.
+Run the service locally with `OPENAI_API_KEY=... OPENAI_MODEL=... ./gradlew -p aiBackend run`. It exposes `GET /health` and `POST /v1/ai/extract-tasks`. Build a container from the repository root with `docker build -t focusai-backend .`; provide `OPENAI_API_KEY` and `OPENAI_MODEL` at runtime. The included in-memory per-IP limit is intended for a single small deployment; the service has no client authentication, so put it behind an authenticated gateway with rate limits and abuse controls before public use. Review OpenAI data handling and configure retention to match your product policy before enabling a production endpoint.
 
 ## Continuous integration
 

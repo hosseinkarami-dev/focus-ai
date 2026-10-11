@@ -29,6 +29,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation as ClientContentNegotiation
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.post
 import io.ktor.client.request.header
 import io.ktor.client.request.setBody
@@ -53,6 +54,11 @@ class OpenAiTaskExtractor(
     private val apiKey: String,
     private val model: String,
     private val client: HttpClient = HttpClient(CIO) {
+        install(HttpTimeout) {
+            connectTimeoutMillis = 10_000
+            requestTimeoutMillis = 45_000
+            socketTimeoutMillis = 45_000
+        }
         install(ClientContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
     }
 ) : TaskExtractor {
@@ -127,7 +133,10 @@ fun Application.focusAiModule(extractor: TaskExtractor, limiter: InMemoryRateLim
     install(StatusPages) {
         exception<InvalidRequest> { call, _ -> call.respond(HttpStatusCode.BadRequest, ApiError("invalid_request")) }
         exception<UpstreamFailure> { call, _ -> call.respond(HttpStatusCode.BadGateway, ApiError("ai_service_unavailable")) }
-        exception<Throwable> { call, _ -> call.respond(HttpStatusCode.BadGateway, ApiError("request_failed")) }
+        exception<Throwable> { call, cause ->
+            if (cause is kotlinx.coroutines.CancellationException) throw cause
+            call.respond(HttpStatusCode.BadGateway, ApiError("request_failed"))
+        }
     }
     routing {
         get("/health") { call.respond(mapOf("status" to "ok")) }
