@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add_task"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:shortcutShortLabel="@string/shortcut_add_task_short"
+        android:shortcutLongLabel="@string/shortcut_add_task_long">
+        <intent android:action="io.github.hosseinkarami_dev.focusai.ADD_TASK" android:targetPackage="io.github.hosseinkarami_dev.focusai" android:targetClass="io.github.hosseinkarami_dev.focusai.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="capture_note"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher_foreground"
+        android:shortcutShortLabel="@string/shortcut_capture_short"
+        android:shortcutLongLabel="@string/shortcut_capture_long">
+        <intent android:action="io.github.hosseinkarami_dev.focusai.CAPTURE_NOTE" android:targetPackage="io.github.hosseinkarami_dev.focusai" android:targetClass="io.github.hosseinkarami_dev.focusai.MainActivity" />
+    </shortcut>
+</shortcuts>
