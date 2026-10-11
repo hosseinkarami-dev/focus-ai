@@ -44,6 +44,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 internal fun CaptureDialog(
     existingNote: NoteEntity?,
+    sendsNotesToBackend: Boolean,
     onDismiss: () -> Unit,
     onSaved: () -> Unit,
     onReview: (String, List<TaskProposal>) -> Unit
@@ -60,7 +61,12 @@ internal fun CaptureDialog(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 FocusText("Write it as it comes. Your note is saved here before any suggestions are reviewed.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
                 OutlinedTextField(value = note, onValueChange = { note = it; message = null }, modifier = Modifier.fillMaxWidth(), minLines = 4, maxLines = 7, placeholder = { FocusText("I need to…") })
-                FocusText("Sample AI preview · no service is contacted", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                FocusText(
+                    if (sendsNotesToBackend) "Your note is sent securely to FocusAI only when you request suggestions. Review each suggestion before saving."
+                    else "Sample AI preview · no service is contacted",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
                 message?.let { FocusText(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         },

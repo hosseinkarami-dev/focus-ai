@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -68,6 +69,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.ui.zIndex
@@ -76,6 +78,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import io.github.hosseinkarami_dev.focusai.data.TaskEntity
 import io.github.hosseinkarami_dev.focusai.data.NoteEntity
 import io.github.hosseinkarami_dev.focusai.data.TaskProposal
+import io.github.hosseinkarami_dev.focusai.data.AiProvider
 import io.github.hosseinkarami_dev.focusai.presentation.SettingsViewModel
 import io.github.hosseinkarami_dev.focusai.presentation.TodayViewModel
 import io.github.hosseinkarami_dev.focusai.presentation.FocusViewModel
@@ -96,6 +99,7 @@ import io.github.hosseinkarami_dev.focusai.ui.screens.TaskListScreen
 import io.github.hosseinkarami_dev.focusai.ui.screens.TodayScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.compose.koinInject
 
 private enum class Destination(val label: String) { Today("Today"), Inbox("Inbox"), Tasks("Tasks"), Focus("Focus"), Settings("Settings") }
 private data class ReviewDraft(val noteId: String, val proposals: List<TaskProposal>)
@@ -105,6 +109,7 @@ private data class ReviewDraft(val noteId: String, val proposals: List<TaskPropo
 fun App(initialAction: String? = null, onInitialActionHandled: () -> Unit = {}) {
     val settingsViewModel = koinViewModel<SettingsViewModel>()
     val focusViewModel = koinViewModel<FocusViewModel>()
+    val aiProvider = koinInject<AiProvider>()
     val preferences by settingsViewModel.settings.collectAsState()
     FocusTheme(themeMode = preferences.themeMode, language = preferences.language) {
       CompositionLocalProvider(
@@ -206,7 +211,7 @@ fun App(initialAction: String? = null, onInitialActionHandled: () -> Unit = {}) 
                             selected = destination == item.name,
                             onClick = { destination = item.name },
                             icon = { Icon(item.icon(), contentDescription = null) },
-                            label = { FocusText(item.label) }
+                            label = { FocusText(item.label, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
                         )
                     }
                 }
@@ -218,17 +223,26 @@ fun App(initialAction: String? = null, onInitialActionHandled: () -> Unit = {}) 
                     enter = fadeIn() + scaleIn(initialScale = .82f) + slideInVertically { it / 2 },
                     exit = fadeOut() + scaleOut(targetScale = .82f) + slideOutVertically { it / 2 }
                 ) {
-                    ExtendedFloatingActionButton(
-                        onClick = {
-                            if (destination == Destination.Inbox.name) {
-                                noteToEdit = null
-                                showCapture = true
-                            } else {
-                                taskToEdit = null
-                                taskDueDatePrefill = null
-                                showTaskEditor = true
-                            }
-                        },
+                    val onAdd = {
+                        if (destination == Destination.Inbox.name) {
+                            noteToEdit = null
+                            showCapture = true
+                        } else {
+                            taskToEdit = null
+                            taskDueDatePrefill = null
+                            showTaskEditor = true
+                        }
+                    }
+                    if (LocalDensity.current.fontScale >= 1.5f) {
+                        FloatingActionButton(
+                            onClick = onAdd,
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ) {
+                            Icon(Icons.Filled.Add, contentDescription = if (destination == Destination.Inbox.name) "Capture a note" else "Add task")
+                        }
+                    } else ExtendedFloatingActionButton(
+                        onClick = onAdd,
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                         icon = { Icon(Icons.Filled.Add, contentDescription = null) },
@@ -434,6 +448,7 @@ fun App(initialAction: String? = null, onInitialActionHandled: () -> Unit = {}) 
         )
         if (showCapture) CaptureDialog(
             existingNote = noteToEdit,
+            sendsNotesToBackend = aiProvider.sendsNotesToBackend,
             onDismiss = { showCapture = false },
             onSaved = { showCapture = false; noteToEdit = null },
             onReview = { noteId, proposals -> showCapture = false; noteToEdit = null; review = ReviewDraft(noteId, proposals) }

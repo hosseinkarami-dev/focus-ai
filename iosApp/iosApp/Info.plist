@@ -2,13 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>FOCUSAI_BACKEND_URL</key>
+	<string>$(FOCUSAI_BACKEND_URL)</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>io.github.hosseinkarami_dev.focusai</string>
+			<string>io.github.hosseinkaramidev.focusai</string>
 			<key>CFBundleURLSchemes</key>
 			<array><string>focusai</string></array>
 		</dict>
@@ -17,7 +19,7 @@
 	<array>
 		<dict>
 			<key>UIApplicationShortcutItemType</key>
-			<string>io.github.hosseinkarami_dev.focusai.ADD_TASK</string>
+			<string>io.github.hosseinkaramidev.focusai.ADD_TASK</string>
 			<key>UIApplicationShortcutItemTitle</key>
 			<string>Add task</string>
 			<key>UIApplicationShortcutItemSubtitle</key>
@@ -27,7 +29,7 @@
 		</dict>
 		<dict>
 			<key>UIApplicationShortcutItemType</key>
-			<string>io.github.hosseinkarami_dev.focusai.CAPTURE_NOTE</string>
+			<string>io.github.hosseinkaramidev.focusai.CAPTURE_NOTE</string>
 			<key>UIApplicationShortcutItemTitle</key>
 			<string>Capture thought</string>
 			<key>UIApplicationShortcutItemSubtitle</key>

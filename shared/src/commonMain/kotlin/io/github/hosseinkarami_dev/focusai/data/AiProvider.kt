@@ -19,6 +19,7 @@ data class TaskProposal(
 )
 
 interface AiProvider {
+    val sendsNotesToBackend: Boolean get() = false
     suspend fun extractTasks(note: String): List<TaskProposal>
 }
 
@@ -52,6 +53,7 @@ class RemoteAiProvider(
     private val client: HttpClient,
     private val endpoint: String
 ) : AiProvider {
+    override val sendsNotesToBackend: Boolean = true
     override suspend fun extractTasks(note: String): List<TaskProposal> {
         require(endpoint.startsWith("https://")) { "AI backend must use HTTPS" }
         require(note.isNotBlank() && note.length <= 12_000) { "Note is empty or too long" }

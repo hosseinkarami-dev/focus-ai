@@ -10,6 +10,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/FocusAITheme">
+        <meta-data android:name="io.github.hosseinkarami_dev.focusai.AI_BACKEND_URL" android:value="${aiBackendUrl}" />
         <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         <receiver android:name=".FocusAiWidgetProvider" android:exported="false">
             <intent-filter>

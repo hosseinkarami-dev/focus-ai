@@ -2,7 +2,9 @@
 
 ## Provider boundary
 
-The shared domain calls `AiProvider`; it receives normalized domain inputs and returns untrusted suggestion results. It cannot depend on a repository or write local data. Implementations are a deterministic sample provider and `RemoteAiProvider`. The current remote adapter sends a versioned JSON request over HTTPS and checks response version/request ID, title length, and duplicate titles. Runtime DI deliberately selects the sample provider until a backend endpoint is configured. Model vendor and credentials remain server-side. Move transport DTOs to `data/ai/dto` and separate them from domain models/presentation state as the production feature is expanded.
+The shared domain calls `AiProvider`; it receives normalized domain inputs and returns untrusted suggestion results. It cannot depend on a repository or write local data. Implementations are a deterministic sample provider and `RemoteAiProvider`. Runtime DI selects the sample provider unless an HTTPS backend endpoint is configured through Android's `focusAiBackendUrl` Gradle property or iOS `FOCUSAI_BACKEND_URL` build setting. The separate `aiBackend/` Ktor service implements the versioned endpoint and calls OpenAI Responses API with Structured Outputs. `OPENAI_API_KEY` and `OPENAI_MODEL` are server environment variables and are never built into the app. The explicit AI action shows a disclosure when remote mode is active; generated suggestions remain untrusted and require confirmation before local task creation.
+
+The service applies input limits and a basic single-process per-IP request limit. Configure a reverse-proxy/gateway limit before public deployment; the in-memory limiter is not shared across replicas and IP forwarding headers are intentionally not trusted. Run the optional server with `./gradlew -p aiBackend run` after configuring its environment.
 
 ## Versioned wire schemas
 

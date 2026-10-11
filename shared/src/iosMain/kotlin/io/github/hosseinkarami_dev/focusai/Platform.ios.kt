@@ -32,6 +32,10 @@ class IOSPlatform: Platform {
 
 actual fun getPlatform(): Platform = IOSPlatform()
 
+actual fun configuredAiBackendEndpoint(context: Any?): String? =
+    (platform.Foundation.NSBundle.mainBundle.objectForInfoDictionaryKey("FOCUSAI_BACKEND_URL") as? String)
+        ?.trim()?.takeIf { it.startsWith("https://") }
+
 actual fun formatEpochDate(epochMillis: Long, language: String): String {
     val formatter = NSDateFormatter().apply {
         locale = platform.Foundation.NSLocale(localeIdentifier = language)
@@ -127,7 +131,7 @@ actual fun localDateIso(epochMillis: Long): String = NSDateFormatter().apply {
 }.stringFromDate(NSDate(timeIntervalSinceReferenceDate = epochMillis.toDouble() / 1000.0 - 978_307_200.0))
 
 actual fun publishWidgetTaskSnapshot(taskTitles: List<String>) {
-    NSUserDefaults(suiteName = "group.io.github.hosseinkarami_dev.focusai")
+    NSUserDefaults(suiteName = "group.io.github.hosseinkaramidev.focusai")
         ?.setObject(taskTitles.joinToString("\n"), forKey = "focusai.openTaskTitles")
 }
 

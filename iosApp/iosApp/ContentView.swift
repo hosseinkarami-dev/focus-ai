@@ -24,9 +24,9 @@ struct ContentView: View {
             .onOpenURL { url in
                 let action: String
                 switch url.host {
-                case "task": action = "io.github.hosseinkarami_dev.focusai.ADD_TASK"
-                case "inbox": action = "io.github.hosseinkarami_dev.focusai.CAPTURE_NOTE"
-                default: action = "io.github.hosseinkarami_dev.focusai.OPEN_TASKS"
+                case "task": action = "io.github.hosseinkaramidev.focusai.ADD_TASK"
+                case "inbox": action = "io.github.hosseinkaramidev.focusai.CAPTURE_NOTE"
+                default: action = "io.github.hosseinkaramidev.focusai.OPEN_TASKS"
                 }
                 quickActions.open(action)
             }

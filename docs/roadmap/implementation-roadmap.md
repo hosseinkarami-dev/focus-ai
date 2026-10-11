@@ -1,6 +1,6 @@
 # Implementation roadmap
 
-The project has completed an initial compatibility and UI foundation pass: Compose Material 3 theme and five tabs, a shared/native FocusAI focus mark, an indigo/lilac light/dark palette with apricot accent, Room 3 task/note/settings/session persistence, Koin, shared MVVM state, Ktor with JSON serialization and a typed HTTPS adapter, Inbox search/status filters/edit/archive/restore/delete, local note dates, full-height task create/edit screens with calendar date selection, daily/weekly/monthly recurring tasks, local due reminders on Android and iOS, task search and status filters, completion Undo with branded feedback, persisted manual task order, task checklist steps, editable theme/language/focus preferences, timestamp-based focus controls and recent session history, daily focus goals and optional break reminders, English/Persian/Spanish/French/Arabic interface copy with RTL for Persian and Arabic, Manrope/Noto Sans Arabic typography, explainable 7/30-day focus insights with task-completion timestamps, and a sample-only note suggestion/review flow. No remote AI backend is configured.
+The project has completed an initial compatibility and UI foundation pass: Compose Material 3 theme and five tabs, a shared/native FocusAI focus mark, an indigo/lilac light/dark palette with apricot accent, Room 3 task/note/settings/session persistence, Koin, shared MVVM state, Ktor with JSON serialization and a typed HTTPS adapter, Inbox search/status filters/edit/archive/restore/delete, local note dates, full-height task create/edit screens with calendar date selection, daily/weekly/monthly recurring tasks, local due reminders on Android and iOS, task search and status filters, completion Undo with branded feedback, persisted manual task order, task checklist steps, editable theme/language/focus preferences, timestamp-based focus controls and recent session history, daily focus goals and optional break reminders, English/Persian/Spanish/French/Arabic interface copy with RTL for Persian and Arabic, Manrope/Noto Sans Arabic typography, explainable 7/30-day focus insights with task-completion timestamps, and a sample-default note suggestion/review flow. An optional OpenAI-backed Ktor service is now included; apps still use sample suggestions until an HTTPS endpoint is configured.
 
 ## Phase 0 — Compatibility spike and app foundation
 
@@ -52,16 +52,20 @@ The project has completed an initial compatibility and UI foundation pass: Compo
 
 ## Phase 5 — Secure backend integration
 
-**Work:** Ktor remote adapter, backend contract/configuration, error mapping, privacy copy, request limits and observable provider status. Backend service itself is a separate project/deployment decision and is not part of this client repository phase.
+**Status:** the shared Ktor adapter now selects the sample provider by default and uses a configured HTTPS endpoint when present. The separate `aiBackend/` service exposes the versioned extraction endpoint, calls OpenAI Responses API with strict structured output, keeps credentials in server environment variables, validates/normalizes proposals, limits note size, and applies a basic in-memory per-IP rate limit. The editor shows a transmission disclosure only when remote mode is configured; suggestions still require confirmation before Room writes.
+
+**Remaining:** deploy behind HTTPS with gateway-level abuse protection, choose the production model, review data-retention terms, and exercise timeout/retry behavior against a staging deployment. The in-memory limiter is for a single backend process and is not a complete public-service abuse defense.
 
 **Acceptance:** app contains no provider secret; backend owns credentials and model selection; offline/timeout/rate-limit/retry paths preserve input; only explicit AI action transmits note content.
 
 ## Phase 6 — Polish and release readiness
 
-**Work:** visual verification on Android/iOS, accessibility audits, localization/date testing, performance, crash-safe persistence, release build configuration and real version/project metadata.
+**Status:** Android release signing can be supplied through environment variables without checking secrets into source. iOS now uses syntactically valid bundle and App Group identifiers. GitHub Actions builds/tests Android and the backend, compiles the shared iOS arm64 framework, and builds an unsigned generic iOS device app without launching an iOS simulator.
+
+**Remaining:** configure/register the iOS App Group and signing team, verify release signing with private CI secrets, complete platform accessibility and device checks, and run the GitHub workflow after publishing the branch. Android Room migration instrumentation now covers both the full schema v1→v12 path and preservation/default values for v11→v12 on an Android emulator.
 
 **Acceptance:** testing gates in `../testing/testing-strategy.md` pass on supported toolchains; docs match shipped behavior; no demo data is presented as user data.
 
 ## Dependency order and risks
 
-The selected Room/KSP/Koin/Ktor libraries compile for Android and iOS, and the full iOS simulator app target builds. The iOS target reports a bundle identifier validation warning that should be resolved when the product identifier is confirmed for release. Remaining risks include Room schema evolution, full navigation back-stack parity beyond the defined Back behavior, Android API 37 availability in CI, release signing and device-level verification. Keep additions in the version catalog and recheck compatibility when upgrading. The repository has Git metadata; current changes are uncommitted.
+The selected Room/KSP/Koin/Ktor libraries compile for Android and iOS device architecture. Remaining risks include full navigation back-stack parity beyond the defined Back behavior, Android API 35 CI image availability, registered Apple signing capabilities, notification/widget workflows on physical devices, broader screen-reader and 200% text review, and deploying the optional AI backend. Keep additions in the version catalog and recheck compatibility when upgrading. The repository has Git metadata; current changes are uncommitted.

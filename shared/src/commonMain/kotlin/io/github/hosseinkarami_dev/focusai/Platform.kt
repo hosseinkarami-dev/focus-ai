@@ -9,6 +9,7 @@ interface Platform {
 }
 
 expect fun getPlatform(): Platform
+expect fun configuredAiBackendEndpoint(context: Any? = null): String?
 
 fun currentTimeMillis(): Long = kotlin.time.Clock.System.now().toEpochMilliseconds()
 expect fun formatEpochDate(epochMillis: Long, language: String = "en"): String

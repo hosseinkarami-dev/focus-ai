@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Android and shared checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install the configured Android SDK platform
+        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Run shared tests and build Android app
+        run: ./gradlew :shared:testAndroidHostTest :androidApp:assembleDebug
+      - name: Compile Room migration instrumentation tests
+        run: ./gradlew :shared:compileAndroidDeviceTest
+      - uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          script: ./gradlew :shared:connectedAndroidDeviceTest
+      - name: Test AI backend
+        run: ./gradlew -p aiBackend test
+
+  ios-device-build:
+    name: iOS device build (unsigned)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Compile shared iOS arm64 framework
+        run: ./gradlew :shared:compileKotlinIosArm64
+      - name: Build iOS app for generic device
+        run: >-
+          xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp
+          -sdk iphoneos -destination 'generic/platform=iOS'
+          CODE_SIGNING_ALLOWED=NO build

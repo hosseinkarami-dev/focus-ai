@@ -10,6 +10,7 @@ import io.github.hosseinkarami_dev.focusai.data.FocusSessionRepository
 import io.github.hosseinkarami_dev.focusai.data.NoteRepository
 import io.github.hosseinkarami_dev.focusai.data.SettingsRepository
 import io.github.hosseinkarami_dev.focusai.data.SampleAiProvider
+import io.github.hosseinkarami_dev.focusai.data.RemoteAiProvider
 import io.github.hosseinkarami_dev.focusai.data.TaskRepository
 import io.github.hosseinkarami_dev.focusai.data.createFocusDatabase
 import io.github.hosseinkarami_dev.focusai.data.createHttpClient
@@ -18,6 +19,7 @@ import io.github.hosseinkarami_dev.focusai.createTaskReminderScheduler
 import io.github.hosseinkarami_dev.focusai.TaskReminderScheduler
 import io.github.hosseinkarami_dev.focusai.FocusBreakReminderScheduler
 import io.github.hosseinkarami_dev.focusai.createFocusBreakReminderScheduler
+import io.github.hosseinkarami_dev.focusai.configuredAiBackendEndpoint
 import io.github.hosseinkarami_dev.focusai.presentation.TodayViewModel
 import io.github.hosseinkarami_dev.focusai.presentation.SettingsViewModel
 import io.github.hosseinkarami_dev.focusai.presentation.FocusViewModel
@@ -44,8 +46,10 @@ fun initKoin(platformContext: Any? = null) {
             single<NoteRepository> { RoomNoteRepository(get()) }
             single<SettingsRepository> { RoomSettingsRepository(get()) }
             single<FocusSessionRepository> { RoomFocusSessionRepository(get()) }
-            single<AiProvider> { SampleAiProvider() }
             single<HttpClient> { createHttpClient() }
+            single<AiProvider> {
+                configuredAiBackendEndpoint(platformContext)?.let { RemoteAiProvider(get(), it) } ?: SampleAiProvider()
+            }
             factory { TodayViewModel(get(), get(), get(), get()) }
             factory { SettingsViewModel(get()) }
             factory { FocusViewModel(get(), get(), get()) }

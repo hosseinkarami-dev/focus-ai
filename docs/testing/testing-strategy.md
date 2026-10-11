@@ -1,6 +1,6 @@
 # Testing strategy
 
-No new automated tests have been added yet. Android debug assembly, shared iOS arm64 compilation, and a generic iPhoneOS app-plus-widget build have passed for the current foundation. These compile checks do not replace device-level usability and accessibility verification. Keep business logic deterministic with injected clock, ID generator where helpful, repositories, and provider as production flows are added.
+Automated coverage now includes backend health, response-envelope/normalization, invalid schema, and rate-limit unit cases. Android host tests, Android debug assembly, shared iOS arm64 compilation, and a generic iPhoneOS app-plus-widget build have passed. These compile checks do not replace device-level usability and accessibility verification. Keep business logic deterministic with injected clock, ID generator where helpful, repositories, and provider as production flows are added.
 
 ## Unit tests
 
@@ -13,7 +13,7 @@ No new automated tests have been added yet. Android debug assembly, shared iOS a
 
 - Test Room entities/mappers and DAO flows, ordering, archive behavior, atomic confirmation, and clear-data behavior against an in-memory or temporary platform database.
 - Verify local operations require no network and emit updated Flow values promptly.
-- Test database migration paths before schema changes are released; include migration fixtures.
+- Android instrumentation migration tests create and upgrade a v1 fixture through v12 and verify v11 settings are preserved while v12 defaults are applied. Keep the fixtures and runtime checks current before schema changes are released.
 
 ## Provider/network tests
 
@@ -36,12 +36,17 @@ No new automated tests have been added yet. Android debug assembly, shared iOS a
 - Verify Android and iOS home-screen widgets refresh from current open tasks, render empty/long-title states, and route their task, task-creation, and capture actions into the matching app screens. Check the iOS App Group entitlement on both targets in a signed device build.
 - Review at 200% text size and with screen readers: Today, Inbox, Tasks List/Week, task editor, Focus, Settings, dialogs, and transient feedback. Confirm all content remains reachable by scrolling, controls retain a 48 dp minimum target, dynamic labels describe actions and state, and no fixed-size chart, timer, or date cell clips text.
 
-The current checkout was verified with Android debug assembly and shared iOS arm64 compilation. Device-level checks are still pending; Android Debug Bridge is not available in the local environment, and iOS simulator verification is intentionally not part of this workflow.
+The current checkout was verified with Android host tests, Android debug and release assembly, backend API tests, Android emulator Room migrations, shared iOS arm64 compilation, and an unsigned generic iPhoneOS app-plus-widget build. Android visual checks at 150% and 200% font scale confirmed task metadata wraps; the bottom navigation now keeps labels on one line and the add action becomes compact at very large font sizes. Notification delivery, widget behavior, screen-reader navigation, and signed iOS device behavior remain pending. iOS simulator verification is intentionally not part of this workflow.
+
+## Automated CI coverage
+
+- GitHub Actions Android job: `:shared:testAndroidHostTest`, `:androidApp:assembleDebug`, and Room instrumentation migration tests on an API 35 emulator; the separate Ktor service runs its API tests.
+- GitHub Actions iOS job: shared iOS arm64 compilation and unsigned generic iOS device build only; no iOS simulator is launched.
 
 ## Integration and release gates
 
 1. Android shared unit/host tests and Android app assembly pass.
-2. iOS simulator shared tests and Xcode app build pass on a configured Apple toolchain.
+2. Shared iOS arm64 compilation and unsigned generic iOS app/widget build pass; signed device workflow is verified before store distribution.
 3. End-to-end local workflow passes with network disabled.
 4. AI integration proves untrusted payload validation and explicit-confirmation persistence boundary.
 5. Accessibility and theme review has no blocking contrast, clipping, or semantics defects.

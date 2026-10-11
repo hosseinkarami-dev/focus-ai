@@ -136,6 +136,13 @@ class AndroidPlatform : Platform {
 
 actual fun getPlatform(): Platform = AndroidPlatform()
 
+actual fun configuredAiBackendEndpoint(context: Any?): String? = runCatching {
+    val appContext = (context as? Context)?.applicationContext ?: return null
+    appContext.packageManager.getApplicationInfo(appContext.packageName, PackageManager.GET_META_DATA)
+        .metaData?.getString("io.github.hosseinkarami_dev.focusai.AI_BACKEND_URL")
+        ?.trim()?.takeIf { it.startsWith("https://") }
+}.getOrNull()
+
 actual fun formatEpochDate(epochMillis: Long, language: String): String =
     SimpleDateFormat("MMM d, yyyy", Locale.forLanguageTag(language)).format(Date(epochMillis))
 

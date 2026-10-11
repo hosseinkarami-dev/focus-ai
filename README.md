@@ -4,10 +4,11 @@
 
 ![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?logo=kotlin&logoColor=white)
 ![Platforms](https://img.shields.io/badge/Platforms-Android%20%7C%20iOS-5965E0)
+[![CI](https://github.com/hosseinkarami-dev/focus-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/hosseinkarami-dev/focus-ai/actions/workflows/ci.yml)
 
 FocusAI is a privacy-minded productivity app for Android and iOS. Capture a thought in your Inbox, shape it into a task when you are ready, and make room for focused work with a built-in timer. Tasks, notes, preferences, and focus history are stored locally on your device.
 
-> **AI status:** task suggestions currently use a clearly labeled sample provider. No AI service is contacted and your notes are not uploaded.
+> **AI status:** sample suggestions are the default. A separately deployable OpenAI-backed Ktor service is included; the app contacts it only when a backend URL is configured and the user requests suggestions. The OpenAI key stays on the server.
 
 ## What you can do
 
@@ -51,12 +52,23 @@ The shared module targets Android, iOS arm64, and iOS simulator arm64. Platform-
 
 Open [`iosApp/iosApp.xcodeproj`](iosApp/iosApp.xcodeproj) in Xcode and build the `iosApp` scheme for an iOS device or simulator. The iOS widget extension is included in the app target. App Group capabilities must be configured for the signing team to install and refresh the widget on a device.
 
+### AI backend (optional)
+
+The default build uses sample suggestions and makes no AI network request. To use real suggestions, deploy the service in `aiBackend/` behind HTTPS, then configure the app with the full endpoint URL, for example `-PfocusAiBackendUrl=https://your-api.example/v1/ai/extract-tasks` for Android or set `FOCUSAI_BACKEND_URL` to that full endpoint in `iosApp/Configuration/Config.xcconfig`. Set `OPENAI_API_KEY`, `OPENAI_MODEL`, and optionally `PORT` in the backend environment. Never put the OpenAI key in the app.
+
+Run the service locally with `OPENAI_API_KEY=... OPENAI_MODEL=... ./gradlew -p aiBackend run`. It exposes `GET /health` and `POST /v1/ai/extract-tasks`. The included in-memory per-IP limit is intended for a single small deployment; production deployments should also apply gateway rate limits and abuse controls. Review OpenAI data handling and configure retention to match your product policy before enabling a production endpoint.
+
+## Continuous integration
+
+GitHub Actions runs shared Android host tests, builds the Android app, tests the AI backend, compiles the shared iOS arm64 framework, and builds the iOS app for a generic device with code signing disabled. CI does not run an iOS simulator.
+
 ## Project structure
 
 ```text
 androidApp/   Android app entry point, notifications, launcher actions, and widget
 iosApp/       SwiftUI app entry point, WidgetKit extension, and iOS project
 shared/       Compose UI, MVVM state, Room data, localization, and shared platform APIs
+aiBackend/    Optional Ktor service that calls OpenAI without exposing its key to clients
 docs/         Product, design, architecture, testing, and roadmap documentation
 ```
 

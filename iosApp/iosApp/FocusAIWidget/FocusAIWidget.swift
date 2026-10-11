@@ -1,7 +1,7 @@
 import SwiftUI
 import WidgetKit
 
-private let appGroup = "group.io.github.hosseinkarami_dev.focusai"
+private let appGroup = "group.io.github.hosseinkaramidev.focusai"
 private let taskSnapshotKey = "focusai.openTaskTitles"
 
 private struct FocusEntry: TimelineEntry {
