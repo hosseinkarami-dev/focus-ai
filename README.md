@@ -50,7 +50,7 @@ The shared module targets Android, iOS arm64, and iOS simulator arm64. Platform-
 
 ### iOS
 
-Open [`iosApp/iosApp.xcodeproj`](iosApp/iosApp.xcodeproj) in Xcode and build the `iosApp` scheme for an iOS device or simulator. The iOS widget extension is included in the app target. App Group capabilities must be configured for the signing team to install and refresh the widget on a device.
+Open [`iosApp/iosApp.xcodeproj`](iosApp/iosApp.xcodeproj) in Xcode and build the `iosApp` scheme. The iOS widget extension is included in the app target. App Group capabilities must be registered for the signing team before installing the app and refreshing the widget on a device.
 
 ### AI backend (optional)
 
@@ -60,7 +60,7 @@ Run the service locally with `OPENAI_API_KEY=... OPENAI_MODEL=... ./gradlew -p a
 
 ## Continuous integration
 
-GitHub Actions runs shared Android host tests, builds the Android app, tests the AI backend, compiles the shared iOS arm64 framework, and builds the iOS app for a generic device with code signing disabled. CI does not run an iOS simulator.
+GitHub Actions runs shared Android host tests, builds the Android app, compiles and runs Room migration instrumentation tests on an Android emulator, tests the AI backend, compiles the shared iOS arm64 framework, and builds the iOS app for a generic device with code signing disabled. CI does not launch an iOS simulator. The current workflow is green; see the [CI runs](https://github.com/hosseinkarami-dev/focus-ai/actions/workflows/ci.yml) for the latest result.
 
 ## Project structure
 
@@ -84,4 +84,4 @@ docs/         Product, design, architecture, testing, and roadmap documentation
 
 ## Current status
 
-The core local-first flows are implemented, including task and note management, focus sessions, reminders, recurring tasks, daily focus goals, localization, Android and iOS home-screen entry points, and settings. Accessibility and larger-text review and on-device workflow verification remain part of the roadmap. See the [implementation roadmap](docs/roadmap/implementation-roadmap.md) for details.
+The core local-first flows are implemented, including task and note management, focus sessions, reminders, recurring tasks, daily focus goals, localization, Android and iOS home-screen entry points, and settings. Android and backend checks pass in CI; the unsigned generic iOS device build also passes. Store distribution still requires app signing and physical-device verification. The optional AI service is not deployed; deploy it only after configuring authentication, gateway-level abuse controls, HTTPS, and a published data-retention policy. See the [implementation roadmap](docs/roadmap/implementation-roadmap.md) for the remaining release work.
